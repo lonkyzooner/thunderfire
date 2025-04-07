@@ -20,6 +20,15 @@ const languages = {
   arabic: 'العربية'
 };
 
+const languageVoices = {
+  english: 'ash',
+  spanish: 'es_voice',
+  french: 'fr_voice',
+  vietnamese: 'vi_voice',
+  mandarin: 'zh_voice',
+  arabic: 'ar_voice'
+};
+
 // Complete Miranda Rights text according to Louisiana statutes (La. R.S. 15:451)
 const mirandaText = {
   english: "You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to an attorney. If you cannot afford an attorney, one will be provided for you. Do you understand the rights I have just read to you? With these rights in mind, do you wish to speak to me?",
@@ -177,7 +186,7 @@ export function MirandaRights() {
       
       // Use LiveKit Voice API with 'ash' voice for all speech output
       try {
-        await speak(mirandaText[selectedLanguage], 'ash');
+        await speak(mirandaText[selectedLanguage], languageVoices[selectedLanguage]);
         console.log('Miranda rights TTS with LiveKit completed successfully');
       } catch (speakError) {
         console.error('LiveKit TTS method failed:', speakError);
