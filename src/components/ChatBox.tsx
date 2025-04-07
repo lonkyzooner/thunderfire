@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { UserIcon, BotIcon, SendIcon, MicIcon } from 'lucide-react';
 import { orchestratorService } from '../services/OrchestratorService';
+import { voiceSynthesisService } from '../services/voice/VoiceSynthesisService';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -31,6 +32,9 @@ const ChatBox: React.FC = () => {
     const userId = 'demo-user';
     const listener = (response: any) => {
       setMessages(prev => [...prev, { role: 'assistant', content: response.content, timestamp: Date.now() }]);
+      if (response.content) {
+        voiceSynthesisService.speak(response.content).catch(console.error);
+      }
     };
     orchestratorService.onResponse(userId, listener);
     return () => {
@@ -39,8 +43,11 @@ const ChatBox: React.FC = () => {
   }, []);
 
   const handleMicClick = () => {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in this browser.');
+    const isSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
+
+    if (!isSupported || isIOS) {
+      alert('Voice input is not supported on this device or browser. Please use a compatible browser like Chrome on Android or desktop.');
       return;
     }
 
@@ -85,11 +92,11 @@ const ChatBox: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-background">
+    <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden max-w-full">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-background">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[75%] p-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+            <div className={`max-w-[85%] sm:max-w-[75%] p-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
               <div className="flex items-center gap-2">
                 {msg.role === 'user' ? <UserIcon className="h-4 w-4" /> : <BotIcon className="h-4 w-4" />}
                 <span className="text-sm">{msg.content}</span>
@@ -99,7 +106,7 @@ const ChatBox: React.FC = () => {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <div className="flex items-center gap-2 p-3 border-t border-border bg-background">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 sm:p-3 border-t border-border bg-background">
         <input
           type="text"
           value={inputText}
@@ -115,7 +122,7 @@ const ChatBox: React.FC = () => {
             orchestratorService.receiveInput({ userId: 'demo-user', type: 'text', content: inputText });
             setInputText('');
           }}
-          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 w-full sm:w-auto"
           aria-label="Send message"
           disabled={!inputText.trim()}
         >
@@ -123,7 +130,7 @@ const ChatBox: React.FC = () => {
         </button>
         <button
           onClick={handleMicClick}
-          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 w-full sm:w-auto"
           aria-label={isSpeaking ? 'Stop voice input' : 'Start voice input'}
         >
           <MicIcon size={18} />

@@ -7,6 +7,7 @@ interface MirandaLog {
   caseNumber: string;
   timestamp: number;
   officer: string;
+  language: string;
 }
 
 const MirandaWorkflow: React.FC = () => {
@@ -20,7 +21,7 @@ const MirandaWorkflow: React.FC = () => {
 
   const handleStart = () => setStep(2);
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const log: MirandaLog = {
       id: `${Date.now()}`,
       suspectName,
@@ -28,9 +29,22 @@ const MirandaWorkflow: React.FC = () => {
       caseNumber,
       timestamp: Date.now(),
       officer: 'Officer Name', // TODO: Replace with actual officer info
+      language,
     };
     setLogs(prev => [...prev, log]);
     // TODO: Save log to backend or IndexedDB
+    try {
+      const response = await fetch('/api/miranda-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(log),
+      });
+      if (!response.ok) {
+        console.warn('Failed to save Miranda log to backend');
+      }
+    } catch (err) {
+      console.error('Error saving Miranda log:', err);
+    }
     setStep(3);
   };
 
@@ -42,7 +56,7 @@ const MirandaWorkflow: React.FC = () => {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-black"
           >
             <option value="english">English</option>
             <option value="spanish">Spanish</option>
@@ -55,19 +69,19 @@ const MirandaWorkflow: React.FC = () => {
             value={suspectName}
             onChange={(e) => setSuspectName(e.target.value)}
             placeholder="Suspect Name"
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-black"
           />
           <input
             value={dob}
             onChange={(e) => setDob(e.target.value)}
             placeholder="Date of Birth"
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-black"
           />
           <input
             value={caseNumber}
             onChange={(e) => setCaseNumber(e.target.value)}
             placeholder="Case Number"
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-black"
           />
           <button
             onClick={async () => {
@@ -141,11 +155,11 @@ async function translateMiranda(language: string): Promise<string> {
   }
 }
 
+import { voiceSynthesisService } from '../services/voice/VoiceSynthesisService';
+
 async function speakMiranda(text: string) {
   try {
-    // Replace with actual LiveKit/OpenAI TTS API call
-    console.log('Speaking with Ash voice:', text);
-    // Example: await liveKitService.speak(text, 'ash');
+    await voiceSynthesisService.speak(text);
   } catch (err) {
     console.error('Error speaking Miranda:', err);
   }
