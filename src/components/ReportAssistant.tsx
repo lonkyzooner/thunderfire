@@ -23,7 +23,7 @@ const ReportAssistant: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer REMOVED_SECRET'
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`
         },
         body: JSON.stringify({
           model: 'quasar-alpha',
