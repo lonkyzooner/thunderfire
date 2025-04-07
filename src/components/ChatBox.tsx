@@ -16,9 +16,11 @@ interface ChatBoxProps {
   sendMessage?: (text: string) => void;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ onMicClick, isSpeaking }) => {
+const ChatBox: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,6 +37,52 @@ const ChatBox: React.FC<ChatBoxProps> = ({ onMicClick, isSpeaking }) => {
       orchestratorService.offResponse(userId, listener);
     };
   }, []);
+
+  const handleMicClick = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionClass();
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+      }
+
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = event.results[0][0].transcript;
+          setMessages(prev => [...prev, { role: 'user', content: transcript, timestamp: Date.now() }]);
+          orchestratorService.receiveInput({ userId: 'demo-user', type: 'text', content: transcript });
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error', event);
+          setIsSpeaking(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsSpeaking(false);
+        };
+      }
+    }
+
+    if (isSpeaking) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsSpeaking(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+      }
+      setIsSpeaking(true);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden">
@@ -73,15 +121,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({ onMicClick, isSpeaking }) => {
         >
           <SendIcon size={18} />
         </button>
-        {onMicClick && (
-          <button
-            onClick={onMicClick}
-            className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30"
-            aria-label={isSpeaking ? 'Stop voice input' : 'Start voice input'}
-          >
-            <MicIcon size={18} />
-          </button>
-        )}
+        <button
+          onClick={handleMicClick}
+          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label={isSpeaking ? 'Stop voice input' : 'Start voice input'}
+        >
+          <MicIcon size={18} />
+        </button>
       </div>
     </div>
   );
