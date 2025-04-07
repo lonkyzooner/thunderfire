@@ -124,6 +124,38 @@ export const NewDashboard: React.FC = () => {
 
   return (
     <div className="bg-gray-900 text-white p-6 rounded-lg shadow-xl">
+      <div className="flex justify-between mb-4">
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2">
+            <span className="text-sm">Theme:</span>
+            <select
+              onChange={(e) => {
+                const theme = e.target.value;
+                document.documentElement.setAttribute('data-theme', theme);
+              }}
+              className="bg-gray-800 text-white px-2 py-1 rounded border border-gray-700"
+            >
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm">Font Size:</span>
+            <select
+              onChange={(e) => {
+                const size = e.target.value;
+                document.documentElement.style.setProperty('--app-font-size', size);
+              }}
+              className="bg-gray-800 text-white px-2 py-1 rounded border border-gray-700"
+            >
+              <option value="14px">Small</option>
+              <option value="16px" selected>Medium</option>
+              <option value="18px">Large</option>
+            </select>
+          </label>
+        </div>
+      </div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-2">
           L.A.R.K Command Center

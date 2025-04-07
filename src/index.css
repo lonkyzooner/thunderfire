@@ -9,6 +9,7 @@
   html {
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.01em;
+    font-size: var(--app-font-size, 16px);
   }
 
   .font-heading {
@@ -25,6 +26,8 @@
   }
 
   :root {
+    --app-font-size: 16px;
+
     /* Modern LARK color scheme - light theme */
     --background: 210 40% 98%; /* Clean white background */
     --foreground: 222 47% 15%; /* Dark blue text for high readability */
@@ -67,6 +70,66 @@
     --warning: 38 92% 50%;
     --info: 200 90% 50%;
     --low-battery: 358 75% 55%;
+  }
+
+  [data-theme="dark"] {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 213 94% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 213 30% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 20% 20%;
+    --muted-foreground: 215 25% 75%;
+
+    --accent: 183 85% 45%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 358 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 30%;
+    --input: 215 25% 30%;
+    --ring: 213 94% 50%;
+  }
+
+  [data-theme="light"] {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 15%;
+
+    --primary: 213 94% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 213 70% 95%;
+    --secondary-foreground: 213 80% 30%;
+
+    --muted: 220 15% 93%;
+    --muted-foreground: 215 25% 35%;
+
+    --accent: 183 85% 45%;
+    --accent-foreground: 222 47% 15%;
+
+    --destructive: 358 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 85%;
+    --input: 215 25% 85%;
+    --ring: 213 94% 50%;
   }
 
   .high-contrast {
