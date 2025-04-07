@@ -44,8 +44,15 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
         const current = event.resultIndex;
         const result = event.results[current];
         const transcriptText = result[0].transcript;
-        console.log('Transcript text:', transcriptText, 'Confidence:', result[0].confidence);
-        setTranscript(transcriptText);
+        const confidence = result[0].confidence;
+        console.log('Transcript text:', transcriptText, 'Confidence:', confidence);
+
+        const CONFIDENCE_THRESHOLD = 0.6; // configurable threshold
+        if (confidence >= CONFIDENCE_THRESHOLD) {
+          setTranscript(transcriptText);
+        } else {
+          console.log('Transcript discarded due to low confidence');
+        }
       };
       
       // Handle start event

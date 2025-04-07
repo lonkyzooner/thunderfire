@@ -16,6 +16,27 @@ interface CommandResponse {
     statute?: string;
   };
 }
+export const playAudioFeedback = (action: string) => {
+  const audio = new Audio();
+  switch (action.toLowerCase()) {
+    case 'threat':
+    case 'emergency':
+      audio.src = '/sounds/alert.mp3';
+      break;
+    case 'miranda':
+    case 'rights':
+      audio.src = '/sounds/notification.mp3';
+      break;
+    case 'statute':
+    case 'law':
+      audio.src = '/sounds/info.mp3';
+      break;
+    default:
+      audio.src = '/sounds/success.mp3';
+  }
+  audio.play().catch(console.error);
+};
+
 
 export function useVoiceAssistantCore(initialMessages: { role: 'user' | 'assistant', content: string }[] = []) {
   const [isActive, setIsActive] = useState(false);
@@ -50,26 +71,6 @@ export function useVoiceAssistantCore(initialMessages: { role: 'user' | 'assista
     }
   }, []);
 
-  const playAudioFeedback = useCallback((action: string) => {
-    const audio = new Audio();
-    switch (action.toLowerCase()) {
-      case 'threat':
-      case 'emergency':
-        audio.src = '/sounds/alert.mp3';
-        break;
-      case 'miranda':
-      case 'rights':
-        audio.src = '/sounds/notification.mp3';
-        break;
-      case 'statute':
-      case 'law':
-        audio.src = '/sounds/info.mp3';
-        break;
-      default:
-        audio.src = '/sounds/success.mp3';
-    }
-    audio.play().catch(console.error);
-  }, []);
 
   const {
     transcript,

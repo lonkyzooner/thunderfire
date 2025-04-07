@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { playAudioFeedback } from './useVoiceAssistantCore';
 import { useSpeechRecognition } from './useSpeechRecognition';
 import { processVoiceCommand } from '../lib/openai-service';
 
@@ -40,12 +41,14 @@ export function useWakeWordDetection() {
     const normalizedTranscript = transcript.toLowerCase().trim();
     
     // Check if transcript contains wake word
-    const isWakeWord = WAKE_WORDS.some(word => 
-      normalizedTranscript.includes(word)
-    );
+    const isWakeWord = WAKE_WORDS.some(word => {
+      const pattern = new RegExp(`\\b${word}\\b`, 'i');
+      return pattern.test(normalizedTranscript);
+    });
     
     if (isWakeWord) {
       console.log('Wake word detected');
+      playAudioFeedback('wakeword');
       setIsListeningForCommand(true);
       
       // Stop listening after 10 seconds if no command is received

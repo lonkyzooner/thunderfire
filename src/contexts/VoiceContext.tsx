@@ -46,6 +46,7 @@ interface VoiceContextType {
   
   // Debug info
   debugInfo: string[];
+  mirandaLanguage: string;
 }
 
 // Create the context with default values
@@ -80,7 +81,8 @@ const VoiceContext = createContext<VoiceContextType>({
   stopSpeaking: () => {},
   triggerMiranda: () => {},
   
-  debugInfo: []
+  debugInfo: [],
+  mirandaLanguage: 'english'
 });
 
 // Maximum number of debug messages to keep
@@ -317,6 +319,9 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     voiceRecognitionService.stopListening();
   }, [addDebugMessage]);
   
+  // Miranda language state
+  const [mirandaLanguage, setMirandaLanguage] = useState('english');
+
   // Request microphone permission
   const requestMicrophonePermission = useCallback(async () => {
     addDebugMessage('Requesting microphone permission...');
@@ -326,6 +331,7 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Trigger Miranda rights reading
   const triggerMiranda = useCallback((language: string = 'english') => {
     addDebugMessage(`Triggering Miranda rights in ${language}`);
+    setMirandaLanguage(language);
     
     // Reset Miranda state
     setVoiceEvents(prev => ({
@@ -609,7 +615,8 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     stopSpeaking,
     triggerMiranda,
     
-    debugInfo
+    debugInfo,
+    mirandaLanguage
   };
   
   return (

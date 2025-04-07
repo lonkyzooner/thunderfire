@@ -56,19 +56,53 @@ const ReportAssistant: React.FC = () => {
           placeholder="Enter report title"
           className="w-full border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
-        <button
-          onClick={() => {
-            if (!title.trim() || !reportText.trim()) return;
-            const newReport = { id: `${Date.now()}`, title, content: reportText };
-            setSavedReports(prev => [...prev, newReport]);
-            setTitle('');
-            setReportText('');
-            if (editorRef.current) editorRef.current.innerHTML = '';
-          }}
-          className="mt-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-        >
-          Save Report
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
+          <button
+            className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white transition"
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`
+                  },
+                  body: JSON.stringify({
+                    model: 'quasar-alpha',
+                    messages: [
+                      {
+                        role: 'user',
+                        content: 'Generate a detailed police incident report draft based on the recent conversation and incident data.'
+                      }
+                    ]
+                  }),
+                });
+                const data = await response.json();
+                const generated = data.choices?.[0]?.message?.content;
+                setReportText(generated || 'No report generated.');
+              } catch (err) {
+                console.error('Error generating report:', err);
+              }
+              setLoading(false);
+            }}
+          >
+            Auto-generate Report
+          </button>
+          <button
+            onClick={() => {
+              if (!title.trim() || !reportText.trim()) return;
+              const newReport = { id: `${Date.now()}`, title, content: reportText };
+              setSavedReports(prev => [...prev, newReport]);
+              setTitle('');
+              setReportText('');
+              if (editorRef.current) editorRef.current.innerHTML = '';
+            }}
+            className="px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-white transition"
+          >
+            Save Report
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">

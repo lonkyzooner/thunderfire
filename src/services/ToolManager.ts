@@ -27,6 +27,13 @@ export class ToolManager {
 
 export const toolManager = new ToolManager();
 
+/**
+ * Helper function to invoke a tool by ID.
+ */
+export async function callTool(toolId: string, params: Record<string, any>): Promise<string> {
+  return await toolManager.invokeTool(toolId, params);
+}
+
 // Example tool: Fetch weather info
 toolManager.registerTool({
   id: 'fetch_weather',

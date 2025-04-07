@@ -17,6 +17,7 @@ const { auth } = require('express-oauth2-jwt-bearer');
 const authRoutes = require('./routes/auth');
 const subscriptionRoutes = require('./routes/subscription');
 const r2Routes = require('./routes/r2');
+const stripeWebhook = require('./routes/stripeWebhook');
 
 // For caching responses
 const NodeCache = require('node-cache');
@@ -368,6 +369,7 @@ function gracefulShutdown() {
 // Mount auth and subscription routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/stripe', stripeWebhook);
 app.use('/api/r2', r2Routes);
 
 // Health check endpoint with enhanced information
