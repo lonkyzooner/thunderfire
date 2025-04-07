@@ -40,7 +40,7 @@ export const AppRouter: React.FC = () => {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<StripeLoginPage />} />
         
         {/* Protected routes */}
@@ -52,8 +52,8 @@ export const AppRouter: React.FC = () => {
           </RouteGuard>
         } />
         
-        {/* Subscription and Pricing Pages */}
-        <Route path="/pricing" element={<StripePricingPage />} />
+        {/* Subscription and Pricing Pages - temporarily disabled */}
+        {/* <Route path="/pricing" element={<StripePricingPage />} /> */}
         <Route path="/account" element={
           <RouteGuard>
             <AuthenticatedLayout>
@@ -61,13 +61,13 @@ export const AppRouter: React.FC = () => {
             </AuthenticatedLayout>
           </RouteGuard>
         } />
-        <Route path="/subscription" element={
+        {/* <Route path="/subscription" element={
           <RouteGuard>
             <AuthenticatedLayout>
               <SubscriptionPage />
             </AuthenticatedLayout>
           </RouteGuard>
-        } />
+        } /> */}
         
         {/* Premium features */}
         <Route path="/threat-detection" element={

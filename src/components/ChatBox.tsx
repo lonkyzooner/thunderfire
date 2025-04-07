@@ -18,7 +18,10 @@ interface ChatBoxProps {
 }
 
 const ChatBox: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const saved = localStorage.getItem('lark_chat_history');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [inputText, setInputText] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -26,6 +29,7 @@ const ChatBox: React.FC = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    localStorage.setItem('lark_chat_history', JSON.stringify(messages));
   }, [messages]);
 
   useEffect(() => {
@@ -92,14 +96,28 @@ const ChatBox: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full border border-border rounded-lg overflow-hidden max-w-full">
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-background">
+    <div className="flex flex-col h-full border border-border rounded-2xl shadow-lg overflow-hidden max-w-full bg-gray-900 text-white">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-gray-800">
+        <h2 className="text-lg font-semibold">LARK Assistant</h2>
+        <span className="text-xs text-gray-400">Secure Chat</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gray-900">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] sm:max-w-[75%] p-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+            <div className={`max-w-[85%] sm:max-w-[75%] p-2 rounded-2xl shadow transition-all duration-300 transform animate-fade-in ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
               <div className="flex items-center gap-2">
                 {msg.role === 'user' ? <UserIcon className="h-4 w-4" /> : <BotIcon className="h-4 w-4" />}
-                <span className="text-sm">{msg.content}</span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold">
+                    {msg.role === 'user' ? 'You' : 'LARK'}
+                  </span>
+                  <span className="text-sm">{msg.content}</span>
+                  {msg.timestamp && (
+                    <span className="text-[10px] text-gray-400 mt-1">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -112,7 +130,7 @@ const ChatBox: React.FC = () => {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Type your message..."
-          className="flex-1 px-3 py-2 rounded-md border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm text-foreground"
+          className="flex-1 px-3 py-2 rounded-full border border-gray-700 bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
           aria-label="Type your message"
         />
         <button
@@ -122,7 +140,7 @@ const ChatBox: React.FC = () => {
             orchestratorService.receiveInput({ userId: 'demo-user', type: 'text', content: inputText });
             setInputText('');
           }}
-          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 w-full sm:w-auto"
+          className="p-2 rounded-full bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 w-full sm:w-auto transition"
           aria-label="Send message"
           disabled={!inputText.trim()}
         >
@@ -130,7 +148,7 @@ const ChatBox: React.FC = () => {
         </button>
         <button
           onClick={handleMicClick}
-          className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 w-full sm:w-auto"
+          className="p-2 rounded-full bg-green-600 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 w-full sm:w-auto transition"
           aria-label={isSpeaking ? 'Stop voice input' : 'Start voice input'}
         >
           <MicIcon size={18} />
