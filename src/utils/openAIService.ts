@@ -110,14 +110,13 @@ export async function queryOpenAI(prompt: string, emotion: string = 'neutral'): 
         throw new Error('No valid API key available - cannot make OpenAI request');
       }
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/api/openrouter', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'openrouter/optimus-alpha',
           messages: [
             {
               role: 'system',
