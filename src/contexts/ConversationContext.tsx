@@ -1,45 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+// ConversationContext.tsx
+// [CLEARED] Previous chat context implementation removed.
+// Ready for new chat/case log context design from scratch.
 
-export interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp?: number;
-}
+import { createContext } from "react";
+export const ConversationContext = createContext(null);
 
-interface ConversationContextType {
-  messages: Message[];
-  addMessage: (msg: Message) => void;
-  clearMessages: () => void;
-  currentIntent: string | null;
-  setCurrentIntent: (intent: string | null) => void;
-}
-
-const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
-
-export const ConversationProvider = ({ children }: { children: ReactNode }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentIntent, setCurrentIntent] = useState<string | null>(null);
-
-  const addMessage = (msg: Message) => {
-    setMessages(prev => [...prev, msg]);
-  };
-
-  const clearMessages = () => {
-    setMessages([]);
-    setCurrentIntent(null);
-  };
-
-  return (
-    <ConversationContext.Provider value={{ messages, addMessage, clearMessages, currentIntent, setCurrentIntent }}>
-      {children}
-    </ConversationContext.Provider>
-  );
-};
-
-export const useConversation = () => {
-  const context = useContext(ConversationContext);
-  if (!context) {
-    throw new Error('useConversation must be used within a ConversationProvider');
-  }
-  return context;
-};
+// Placeholder for Message type to satisfy imports
+export type Message = any;

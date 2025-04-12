@@ -66,11 +66,11 @@ npm run dev
    - Add the following environment variables:
 
    ```
-   VITE_OPENAI_API_KEY=your_openai_api_key
    VITE_LIVEKIT_URL=wss://lark-za4hpayr.livekit.cloud
-   VITE_LIVEKIT_API_KEY=APIriVQTTMAvLQ4
-   VITE_LIVEKIT_API_SECRET=fleSOaoOdQ0v5fOatkISxYqvNygclQAeSilRMZ1kLbwB
    ```
+   > **Note:** For translation/statute features, the OpenRouter API key is required in the frontend code. This is less secure, but necessary for frontend-only deployments. Do not commit sensitive keys to git for production use.
+   >
+   > The app is now frontend-only for translation/statute features. All translation and statute analysis is performed via direct calls to the OpenRouter API from the browser.
 
 4. Deploy your application
    - Click "Deploy" and wait for the build to complete

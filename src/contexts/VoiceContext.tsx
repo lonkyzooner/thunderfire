@@ -472,7 +472,7 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       
       // Attempt to speak the text with LiveKit
-      await liveKitVoiceService.speak(text, voice);
+      await liveKitVoiceService.speak(text, 'ash');
       addDebugMessage('Speech synthesis request sent successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

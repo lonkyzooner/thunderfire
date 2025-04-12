@@ -150,7 +150,7 @@ export function RSCodes() {
   // Function to handle voice synthesis - always use LiveKit voice service for consistent voice
   const synthesizeSpeech = (text: string) => {
     // Always use LiveKit voice service for consistent voice experience
-    liveKitVoiceService.speak(text);
+    liveKitVoiceService.speak(text, 'ash');
   };
 
   // Handle voice input for situation analysis
@@ -251,7 +251,36 @@ export function RSCodes() {
         Important: If certain details would be needed to determine if a statute applies, do not include that statute. Only include charges that can be supported by the explicitly stated facts.
       `;
       
-      const legalAnalysis = await getLegalInformation(prompt);
+      // Direct call to OpenRouter API for legal/statute analysis
+      const openrouterApiKey = "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";
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:8080',
+          'X-Title': 'LARK App'
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-4',
+          messages: [
+            { role: 'system', content: 'You are a professional legal assistant for Louisiana law enforcement. Respond in JSON as instructed.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 512
+        })
+      });
+      let legalAnalysis = '';
+      try {
+        const data = await response.json();
+        if (response.ok && data.choices && data.choices[0]?.message?.content) {
+          legalAnalysis = data.choices[0].message.content.trim();
+        } else {
+          legalAnalysis = "An error occurred while retrieving statute information.";
+        }
+      } catch (err) {
+        legalAnalysis = "An error occurred while retrieving statute information.";
+      }
       
       try {
         // Try to parse JSON response
@@ -286,21 +315,21 @@ export function RSCodes() {
           
           // Automatically speak the complete analysis results
           setTimeout(() => {
-            synthesizeSpeech(fullSummary);
+            liveKitVoiceService.speak(fullSummary, 'ash');
           }, 500);
         } else {
           // Handle non-JSON response gracefully
           console.warn("Received non-JSON response:", legalAnalysis);
           setResult(legalAnalysis);
           setTimeout(() => {
-            synthesizeSpeech(`Based on the information you provided, here's my analysis: ${legalAnalysis}`);
+            liveKitVoiceService.speak(`Based on the information you provided, here's my analysis: ${legalAnalysis}`, 'ash');
           }, 500);
         }
       } catch (jsonError) {
         console.error("Error parsing JSON response:", jsonError);
         setResult(legalAnalysis);
         setTimeout(() => {
-          synthesizeSpeech(`Based on the information you provided, here's my analysis: ${legalAnalysis}`);
+          liveKitVoiceService.speak(`Based on the information you provided, here's my analysis: ${legalAnalysis}`, 'ash');
         }, 500);
       }
       
@@ -311,7 +340,7 @@ export function RSCodes() {
     } catch (error) {
       console.error("Error analyzing situation:", error);
       setResult("Sorry, there was an error analyzing this situation.");
-      synthesizeSpeech("Sorry, there was an error analyzing this situation.");
+      liveKitVoiceService.speak("Sorry, there was an error analyzing this situation.", 'ash');
     } finally {
       setIsLoading(false);
     }
@@ -344,160 +373,188 @@ export function RSCodes() {
   };
 
   return (
-    <div className="bg-background rounded-lg p-6 shadow-sm">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-primary font-medium">Louisiana Criminal Code Analysis</h2>
-          <Badge variant="outline" className="text-xs text-muted-foreground border-border">
-            LARK Legal Assistant
-          </Badge>
-        </div>
-        
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <BookOpen className="h-4 w-4 mr-1" />
-          {showAdditionalInfo ? 'Hide Info' : 'Quick Codes'}
-        </Button>
-      </div>
-      
-      {showAdditionalInfo && (
-        <div className="mb-4 bg-muted/50 p-3 rounded-md border border-border">
-          <div className="text-sm text-foreground mb-2 font-medium">Common Louisiana Criminal Codes:</div>
-          <div className="flex flex-wrap gap-2">
-            {commonCodes.map((code) => (
-              <Badge 
-                key={code.code} 
-                variant="outline" 
-                className="cursor-pointer hover:bg-muted border-border"
-                onClick={() => handleQuickCodeSelect(code.code)}
-              >
-                {code.code} - {code.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'lookup' | 'analyze')} className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4 bg-muted/50">
-          <TabsTrigger value="analyze" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Scale className="h-4 w-4 mr-2" /> Analyze Situation
-          </TabsTrigger>
-          <TabsTrigger value="lookup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <Search className="h-4 w-4 mr-2" /> Lookup Statute
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="lookup" className="space-y-4 mt-0">
-          <div className="space-y-2">
-            <div className="flex items-center text-foreground text-sm">
-              <Search className="h-4 w-4 mr-1 text-primary" />
-              <span>Enter Louisiana Statute Reference</span>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={statuteInput}
-                onChange={(e) => setStatuteInput(e.target.value)}
-                placeholder="e.g., 'La. R.S. 14:30' or '14:30'"
-                className="flex-1 bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-              <Button 
-                onClick={() => handleStatuteLookup(statuteInput, setIsLoading, setResult, setSuggestedCharges, synthesizeSpeech, resultRef, setStatuteUrl)}
-                disabled={!statuteInput.trim() || isLoading}
-                className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lookup'}
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="analyze" className="space-y-4 mt-0">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <div className="flex items-center text-slate-900 text-sm font-medium">
-                <Scale className="h-4 w-4 mr-1 text-blue-600" />
-                <span>Describe the situation</span>
-              </div>
-              
-              {hasRecognitionSupport && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleVoiceInput}
-                  className={`flex items-center gap-1 ${listening ? 'bg-destructive/10 text-destructive border-destructive/30' : 'bg-primary/10 text-primary border-primary/30'}`}
-                >
-                  {listening ? (
-                    <>
-                      <StopCircle className="h-4 w-4" /> Stop
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4" /> Voice Input
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-            
-            {listening && (
-              <div className="bg-muted p-2 rounded text-foreground text-sm flex items-center">
-                <Mic className="h-4 w-4 mr-2 text-destructive animate-pulse" />
-                Listening... speak the situation details
-              </div>
-            )}
-            
-            <Textarea
-              value={situationInput}
-              onChange={(e) => setSituationInput(e.target.value)}
-              placeholder="E.g.: Subject was observed taking merchandise valued at $75 from a store without paying and concealing it in their backpack..."
-              className="min-h-[120px] bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-            />
-            
-
-            
-            <Button 
-              onClick={handleSituationAnalysis}
-              disabled={!situationInput.trim() || isLoading}
-              className="w-full bg-primary hover:bg-primary/90"
+    <div className="p-4 space-y-6 bg-white/90 rounded-2xl shadow border border-gray-200 w-full">
+          <div className="flex flex-col items-center justify-center mb-6 gap-2 text-center">
+            <h2 className="text-2xl font-heading font-extrabold text-[hsl(var(--primary))] flex items-center justify-center gap-2">
+              <BookMarked className="h-6 w-6 text-[hsl(var(--accent))]" />
+              Louisiana Criminal Code Analysis
+            </h2>
+            <Badge variant="outline" className="text-xs text-muted-foreground border border-border bg-white/80 font-semibold mt-2 mb-2 px-4 py-2 rounded-full">
+              LARK Legal Assistant
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
+              className="text-muted-foreground hover:text-foreground font-heading font-semibold mt-2"
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Scale className="h-4 w-4 mr-2" />
-              )}
-              Analyze & Suggest Charges
+              <BookOpen className="h-4 w-4 mr-1" />
+              {showAdditionalInfo ? "Hide Info" : "Quick Codes"}
             </Button>
           </div>
-        </TabsContent>
-      </Tabs>
-      
-      {isLoading && (
-        <div className="flex items-center justify-center p-6">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
-            <p className="text-muted-foreground text-sm">Analyzing Louisiana statutes...</p>
-          </div>
-        </div>
-      )}
-      
-      {(result || suggestedCharges.length > 0) && !isLoading && (
-        <div ref={resultRef} className="mt-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-warning" />
-                  Analysis Result
-                </CardTitle>
-                {isSpeaking ? (
-              <Button 
-                size="sm" 
-                variant="outline" 
+
+          {showAdditionalInfo && (
+            <div className="mb-6 bg-muted/60 p-4 rounded-2xl border border-border shadow-inner">
+              <div className="text-sm text-foreground mb-2 font-semibold">
+                Common Louisiana Criminal Codes:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {commonCodes.map((code) => (
+                  <Badge
+                    key={code.code}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-muted border-border font-mono font-semibold px-3 py-2 rounded-xl text-xs"
+                    onClick={() => handleQuickCodeSelect(code.code)}
+                  >
+                    {code.code} - {code.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) =>
+              setActiveTab(value as "lookup" | "analyze")
+            }
+            className="w-full"
+          >
+            <TabsList className="flex mb-6 bg-gradient-to-r from-[hsl(var(--primary))/80] via-[hsl(var(--accent))/70] to-[hsl(var(--primary))/80] p-1 rounded-full shadow-lg border border-[rgba(255,255,255,0.18)] backdrop-blur-lg gap-2">
+              <TabsTrigger
+                value="analyze"
+                className="flex-1 rounded-full py-3 px-2 md:px-4 bg-white/10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[hsl(var(--primary))] data-[state=active]:to-[hsl(var(--accent))] data-[state=active]:text-white text-white/80 font-heading font-semibold text-base shadow-md transition-all duration-300 hover:text-white focus-ring active:scale-98"
+              >
+                <Scale className="h-4 w-4 mr-2" /> Analyze Situation
+              </TabsTrigger>
+              <TabsTrigger
+                value="lookup"
+                className="flex-1 rounded-full py-3 px-2 md:px-4 bg-white/10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[hsl(var(--primary))] data-[state=active]:to-[hsl(var(--accent))] data-[state=active]:text-white text-white/80 font-heading font-semibold text-base shadow-md transition-all duration-300 hover:text-white focus-ring active:scale-98"
+              >
+                <Search className="h-4 w-4 mr-2" /> Lookup Statute
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="lookup" className="space-y-4 mt-0">
+              <div className="space-y-2">
+                <div className="flex items-center text-foreground text-base font-semibold">
+                  <Search className="h-4 w-4 mr-1 text-primary" />
+                  <span>Enter Louisiana Statute Reference</span>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={statuteInput}
+                    onChange={(e) => setStatuteInput(e.target.value)}
+                    placeholder="e.g., 'La. R.S. 14:30' or '14:30'"
+                    className="flex-1 rounded-xl border border-border bg-white/80 text-foreground px-4 py-3 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+                  />
+                  <Button
+                    onClick={() =>
+                      handleStatuteLookup(
+                        statuteInput,
+                        setIsLoading,
+                        setResult,
+                        setSuggestedCharges,
+                        synthesizeSpeech,
+                        resultRef,
+                        setStatuteUrl
+                      )
+                    }
+                    disabled={!statuteInput.trim() || isLoading}
+                    className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-heading font-bold rounded-xl px-6 py-3 shadow-lg hover:scale-105 active:scale-98 transition-all duration-200 whitespace-nowrap"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Lookup"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="analyze" className="space-y-4 mt-0">
+              <div className="space-y-4 flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center w-full">
+                  <div className="flex items-center text-foreground text-base font-semibold mb-2 justify-center">
+                    <Scale className="h-4 w-4 mr-1 text-[hsl(var(--primary))]" />
+                    <span>Describe the situation</span>
+                  </div>
+                  {hasRecognitionSupport && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleVoiceInput}
+                      className={`flex items-center gap-1 rounded-full font-heading font-semibold mt-2 mb-2 ${
+                        listening
+                          ? "bg-destructive/10 text-destructive border-destructive/30"
+                          : "bg-primary/10 text-primary border-primary/30"
+                      }`}
+                    >
+                      {listening ? (
+                        <>
+                          <StopCircle className="h-4 w-4" /> Stop
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-4 w-4" /> Voice Input
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                {listening && (
+                  <div className="bg-blue-100 p-2 rounded-xl text-blue-900 text-sm flex items-center shadow-inner w-full justify-center">
+                    <Mic className="h-4 w-4 mr-2 text-destructive animate-pulse" />
+                    Listening... speak the situation details
+                  </div>
+                )}
+                <Textarea
+                  value={situationInput}
+                  onChange={(e) => setSituationInput(e.target.value)}
+                  placeholder="E.g.: Subject was observed taking merchandise valued at $75 from a store without paying and concealing it in their backpack..."
+                  className="min-h-[120px] rounded-xl border border-border bg-white/80 text-foreground px-4 py-3 font-medium focus:ring-2 focus:ring-primary/40 transition-all w-full"
+                />
+                <Button
+                  onClick={handleSituationAnalysis}
+                  disabled={!situationInput.trim() || isLoading}
+                  className="w-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-heading font-bold rounded-full px-6 py-3 shadow-lg hover:scale-105 active:scale-98 transition-all duration-200 mt-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Scale className="h-4 w-4 mr-2" />
+                  )}
+                  Analyze & Suggest Charges
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {isLoading && (
+            <div className="flex items-center justify-center p-6">
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                <p className="text-muted-foreground text-sm">
+                  Analyzing Louisiana statutes...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {(result || suggestedCharges.length > 0) && !isLoading && (
+            <div ref={resultRef} className="mt-8">
+              <Card className="rounded-2xl border border-border shadow-xl bg-white/90 backdrop-blur-lg">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-heading font-bold flex items-center gap-2 text-[hsl(var(--primary))]">
+                      <AlertTriangle className="h-5 w-5 text-warning" />
+                      Analysis Result
+                    </CardTitle>
+                    {isSpeaking ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
                 onClick={stopSpeaking}
                 className="text-xs h-7 px-2 text-destructive border-destructive/30 bg-destructive/10 hover:bg-destructive/20"
               >

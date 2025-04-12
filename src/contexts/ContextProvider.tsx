@@ -36,14 +36,6 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [ongoingTasks, setOngoingTasks] = useState<Array<{ id: string; description: string; status: string }>>([]);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = pos.coords;
-        setLocation(`Lat: ${coords.latitude.toFixed(4)}, Lon: ${coords.longitude.toFixed(4)}`);
-      },
-      () => setLocation('Location unavailable')
-    );
-
     const interval = setInterval(() => {
       setTime(new Date().toLocaleString());
     }, 1000);

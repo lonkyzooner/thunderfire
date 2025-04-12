@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&family=Manrope:wght@200;300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&family=Manrope:wght@200;300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
@@ -7,13 +7,13 @@
 
 @layer base {
   html {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
     letter-spacing: -0.01em;
     font-size: var(--app-font-size, 16px);
   }
 
   .font-heading {
-    font-family: 'Manrope', 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Space Grotesk', 'Poppins', 'Manrope', sans-serif;
     letter-spacing: -0.03em;
   }
 
@@ -28,43 +28,47 @@
   :root {
     --app-font-size: 16px;
 
-    /* Modern LARK color scheme - light theme */
-    --background: 210 40% 98%; /* Clean white background */
-    --foreground: 222 47% 15%; /* Dark blue text for high readability */
+    /* LARK Overhauled Color Scheme */
+    --background: 222 50% 96%; /* Soft blue-gray */
+    --foreground: 230 15% 10%; /* Deep navy for text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 15%;
+    --card: 240 12% 18%; /* Dark card for glassmorphism */
+    --card-foreground: 220 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 15%;
+    --popover: 240 12% 18%;
+    --popover-foreground: 220 40% 98%;
 
-    /* Blue primary - vibrant but professional */
-    --primary: 213 94% 50%;
+    /* Primary: Vibrant purple/blue gradient */
+    --primary: 265 85% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Light blue secondary for backgrounds and containers */
-    --secondary: 213 70% 95%;
-    --secondary-foreground: 213 80% 30%;
+    /* Secondary: Soft purple/teal for backgrounds */
+    --secondary: 200 80% 92%;
+    --secondary-foreground: 265 85% 40%;
 
-    /* Muted colors with better contrast */
-    --muted: 220 15% 93%;
-    --muted-foreground: 215 25% 35%;
+    /* Muted: Subtle gray for containers */
+    --muted: 220 15% 90%;
+    --muted-foreground: 220 15% 30%;
 
-    /* Vibrant teal accent for important UI elements */
-    --accent: 183 85% 45%;
-    --accent-foreground: 222 47% 15%;
+    /* Accent: Electric teal for highlights */
+    --accent: 180 95% 55%;
+    --accent-foreground: 220 40% 98%;
 
-    /* Bright red for alerts with better visibility */
-    --destructive: 358 75% 55%;
+    /* Destructive: Bright coral for alerts */
+    --destructive: 10 90% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Better defined borders for element separation */
-    --border: 215 25% 85%;
-    --input: 215 25% 85%;
-    --ring: 213 94% 50%;
+    /* Glassmorphism effect */
+    --glass-bg: rgba(30, 34, 90, 0.18);
+    --glass-blur: 18px;
+    --glass-border: rgba(255,255,255,0.18);
 
-    --radius: 0.5rem;
-    
+    --border: 220 15% 80%;
+    --input: 220 15% 80%;
+    --ring: 265 85% 60%;
+
+    --radius: 0.75rem;
+
     /* Status colors for feedback */
     --success: 142 70% 45%;
     --warning: 38 92% 50%;

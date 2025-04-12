@@ -135,20 +135,61 @@ export class VoiceSynthesisService {
     if (!text || text.trim() === '') {
       throw new Error('Cannot synthesize empty text');
     }
-    
+
     // Preprocess text for correct pronunciation
     const processedText = this.preprocessTextForSpeech(text);
+
+    // If using a non-default voice, use ElevenLabs TTS
+    if (voice !== DEFAULT_VOICE) {
+      try {
+        const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voice}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "xi-api-key": apiKey,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg"
+          },
+          body: JSON.stringify({
+            text: processedText,
+            model_id: "eleven_multilingual_v1",
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+          })
+        });
+        if (!response.ok) throw new Error("ElevenLabs TTS failed");
+        const audioData = await response.arrayBuffer();
+        const blob = new Blob([audioData], { type: "audio/mpeg" });
+        const urlObj = URL.createObjectURL(blob);
+        const audio = new Audio(urlObj);
+        audio.play();
+        // Update state
+        this.isSpeaking.next(true);
+        this.synthesisState.next('speaking');
+        this.emitEvent('playback_start', { timestamp: Date.now() });
+        audio.onended = () => {
+          this.isSpeaking.next(false);
+          this.synthesisState.next('idle');
+          this.emitEvent('playback_complete', { timestamp: Date.now() });
+          URL.revokeObjectURL(urlObj);
+        };
+        return;
+      } catch (err) {
+        console.error('[VoiceSynthesis] ElevenLabs TTS failed, falling back to LiveKit/OpenAI:', err);
+        // Fallback to LiveKit/OpenAI below
+      }
+    }
 
     // Update state
     this.isSpeaking.next(true);
     this.synthesisState.next('synthesizing');
     this.emitEvent('synthesis_start', { text: processedText, timestamp: Date.now() });
-    
+
     // Try to use LiveKit voice service first (with fallback mechanisms)
     try {
       // Use the singleton instance of LiveKitVoiceService
       console.log('[VoiceSynthesis] Attempting to use LiveKit voice service');
-      
+
       // Set up event listeners to update our state
       const onSpeakingChange = (isSpeaking: boolean) => {
         console.log('[VoiceSynthesis] Speaking state changed:', isSpeaking);
@@ -158,7 +199,7 @@ export class VoiceSynthesisService {
           this.emitEvent('playback_complete', { timestamp: Date.now() });
         }
       };
-      
+
       const onStateChange = (state: string) => {
         console.log('[VoiceSynthesis] Synthesis state changed:', state);
         if (state === 'speaking') {
@@ -169,24 +210,24 @@ export class VoiceSynthesisService {
           throw new Error('LiveKit voice synthesis error');
         }
       };
-      
+
       // Subscribe to events
       const isSpeakingSub = liveKitVoiceService.getSpeakingState().subscribe(onSpeakingChange);
       const stateSub = liveKitVoiceService.getSynthesisState().subscribe(onStateChange);
-      
+
       // Speak the text using LiveKit (with fallback mechanisms)
       // Always use 'ash' voice for OpenAI realtime voice through LiveKit
       console.log('[VoiceSynthesis] Using OpenAI realtime voice: ash through LiveKit');
       console.log('[VoiceSynthesis] Original text:', text);
       console.log('[VoiceSynthesis] Processed text for pronunciation:', processedText);
       await liveKitVoiceService.speak(processedText, 'ash');
-      
+
       // Cleanup subscriptions
       setTimeout(() => {
         isSpeakingSub.unsubscribe();
         stateSub.unsubscribe();
       }, 1000);
-      
+
       // If we get here, LiveKit successfully handled the speech
       return;
     } catch (liveKitError) {

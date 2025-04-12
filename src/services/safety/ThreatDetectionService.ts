@@ -303,14 +303,6 @@ class ThreatDetectionService {
     }
     
     // Include location if enabled
-    if (this.options.includeLocation) {
-      try {
-        const position = await this.getCurrentPosition();
-        result.location = position.coords;
-      } catch (error) {
-        console.warn('[ThreatDetection] Could not get location:', error);
-      }
-    }
     
     // Add to history
     this.detectionHistory.push(result);
@@ -342,23 +334,6 @@ class ThreatDetectionService {
     return btoa(String.fromCharCode.apply(null, Array.from(compressed)));
   }
 
-  /**
-   * Get current position
-   */
-  private getCurrentPosition(): Promise<GeolocationPosition> {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported'));
-        return;
-      }
-      
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      });
-    });
-  }
 
   /**
    * Get detection history

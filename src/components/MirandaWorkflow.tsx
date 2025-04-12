@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { liveKitVoiceService } from '../services/livekit/LiveKitVoiceService';
 
 interface MirandaLog {
   id: string;
@@ -8,20 +9,69 @@ interface MirandaLog {
   timestamp: number;
   officer: string;
   language: string;
+  translation: string;
 }
+
+const MIRANDA_ENGLISH = `You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to an attorney. If you cannot afford an attorney, one will be provided for you.`;
 
 const MirandaWorkflow: React.FC = () => {
   const [step, setStep] = useState(1);
   const [suspectName, setSuspectName] = useState('');
   const [dob, setDob] = useState('');
   const [caseNumber, setCaseNumber] = useState('');
-  const [logs, setLogs] = useState<MirandaLog[]>([]);
   const [language, setLanguage] = useState('english');
+  const [customLanguage, setCustomLanguage] = useState('');
+  const [translation, setTranslation] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [error, setError] = useState('');
+  const [logs, setLogs] = useState<MirandaLog[]>([]);
 
-  const handleStart = () => setStep(2);
+  const handleTranslateAndSpeak = async () => {
+    setError('');
+    setTranslation('');
+    setIsSpeaking(true);
+    const langToUse = language === 'other' ? customLanguage.trim() : language;
+    try {
+      let translatedText = MIRANDA_ENGLISH;
+      if (langToUse.toLowerCase() !== 'english') {
+        // Direct call to OpenRouter API from frontend
+        const openrouterApiKey = "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";
+        const prompt = `Translate the following text to ${langToUse}:\n\n${MIRANDA_ENGLISH}`;
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterApiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:8080',
+            'X-Title': 'LARK App'
+          },
+          body: JSON.stringify({
+            model: 'openai/gpt-4',
+            messages: [
+              { role: 'system', content: 'You are a professional legal translator.' },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 256
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.choices && data.choices[0]?.message?.content) {
+          translatedText = data.choices[0].message.content.trim();
+        } else {
+          setError('Translation failed. Showing English.');
+        }
+      }
+      setTranslation(translatedText);
+      await liveKitVoiceService.speak(translatedText, 'ash');
+      setStep(2);
+    } catch (err) {
+      setError('Translation or speech failed.');
+      setTranslation(MIRANDA_ENGLISH);
+    }
+    setIsSpeaking(false);
+  };
 
-  const handleComplete = async () => {
+  const handleLog = async () => {
     const log: MirandaLog = {
       id: `${Date.now()}`,
       suspectName,
@@ -29,106 +79,100 @@ const MirandaWorkflow: React.FC = () => {
       caseNumber,
       timestamp: Date.now(),
       officer: 'Officer Name', // TODO: Replace with actual officer info
-      language,
+      language: language === 'other' ? customLanguage.trim() : language,
+      translation,
     };
     setLogs(prev => [...prev, log]);
-    // TODO: Save log to backend or IndexedDB
-    try {
-      const response = await fetch('/api/miranda-log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(log),
-      });
-      if (!response.ok) {
-        console.warn('Failed to save Miranda log to backend');
-      }
-    } catch (err) {
-      console.error('Error saving Miranda log:', err);
-    }
     setStep(3);
+    // Optionally send to backend here
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-6 bg-white/90 rounded-2xl shadow border border-gray-200 w-full">
       {step === 1 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Enter Suspect Details</h2>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="w-full border p-2 rounded text-black"
-          >
-            <option value="english">English</option>
-            <option value="spanish">Spanish</option>
-            <option value="french">French</option>
-            <option value="vietnamese">Vietnamese</option>
-            <option value="mandarin">Mandarin</option>
-            <option value="arabic">Arabic</option>
-          </select>
+        <div className="space-y-5">
+          <h2 className="text-lg font-semibold mb-2">Miranda Workflow</h2>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Language</label>
+            <select
+              value={language}
+              onChange={e => setLanguage(e.target.value)}
+              className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+            >
+              <option value="english">English</option>
+              <option value="spanish">Spanish</option>
+              <option value="french">French</option>
+              <option value="vietnamese">Vietnamese</option>
+              <option value="mandarin">Mandarin</option>
+              <option value="arabic">Arabic</option>
+              <option value="other">Other</option>
+            </select>
+            {language === 'other' && (
+              <input
+                type="text"
+                value={customLanguage}
+                onChange={e => setCustomLanguage(e.target.value)}
+                placeholder="Enter language (e.g., Russian, Hindi)"
+                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all mt-2"
+              />
+            )}
+          </div>
           <input
             value={suspectName}
-            onChange={(e) => setSuspectName(e.target.value)}
+            onChange={e => setSuspectName(e.target.value)}
             placeholder="Suspect Name"
-            className="w-full border p-2 rounded text-black"
+            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
           />
           <input
             value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            onChange={e => setDob(e.target.value)}
             placeholder="Date of Birth"
-            className="w-full border p-2 rounded text-black"
+            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
           />
           <input
             value={caseNumber}
-            onChange={(e) => setCaseNumber(e.target.value)}
+            onChange={e => setCaseNumber(e.target.value)}
             placeholder="Case Number"
-            className="w-full border p-2 rounded text-black"
+            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
           />
+          {error && <div className="text-red-600 text-sm">{error}</div>}
           <button
-            onClick={async () => {
-              setIsSpeaking(true);
-              try {
-                const translatedText = await translateMiranda(language);
-                await speakMiranda(translatedText);
-              } catch (err) {
-                console.error('Error during Miranda translation/speech:', err);
-              }
-              setIsSpeaking(false);
-              handleStart();
-            }}
-            className="px-4 py-2 bg-primary text-white rounded"
+            onClick={handleTranslateAndSpeak}
+            className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200"
             disabled={isSpeaking}
           >
-            {isSpeaking ? 'Speaking...' : 'Start Miranda Rights'}
+            {isSpeaking ? <span className="animate-pulse">Speaking...</span> : <span>Start Miranda Rights</span>}
           </button>
         </div>
       )}
-
       {step === 2 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Reading Miranda Rights</h2>
-          <p>You have the right to remain silent...</p>
-          <p>Anything you say can and will be used against you in a court of law...</p>
-          <p>You have the right to an attorney...</p>
-          <p>If you cannot afford an attorney, one will be provided for you...</p>
+        <div className="space-y-5">
+          <h2 className="text-lg font-semibold mb-2">Miranda Rights (Review)</h2>
+          <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-2 text-base font-medium text-foreground">
+            <p>{translation}</p>
+          </div>
           <button
-            onClick={handleComplete}
-            className="px-4 py-2 bg-green-600 text-white rounded"
+            onClick={handleLog}
+            className="w-full py-3 rounded-md font-heading font-bold text-base bg-green-600 hover:bg-green-700 text-white shadow transition-all duration-200"
           >
             Complete and Log
           </button>
         </div>
       )}
-
       {step === 3 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Miranda Rights Logged</h2>
-          <p>Suspect: {suspectName}</p>
-          <p>DOB: {dob}</p>
-          <p>Case #: {caseNumber}</p>
-          <p>Timestamp: {new Date().toLocaleString()}</p>
+        <div className="space-y-5">
+          <h2 className="text-lg font-semibold mb-2">Miranda Rights Logged</h2>
+          <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-1 text-base font-medium text-foreground">
+            <p>Suspect: {suspectName}</p>
+            <p>DOB: {dob}</p>
+            <p>Case #: {caseNumber}</p>
+            <p>Timestamp: {new Date().toLocaleString()}</p>
+            <p>Language: {language === 'other' ? customLanguage.trim() : language}</p>
+            <p>Translation: {translation}</p>
+          </div>
           <button
             onClick={() => setStep(1)}
-            className="px-4 py-2 bg-primary text-white rounded"
+            className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200"
           >
             New Miranda Event
           </button>
@@ -137,33 +181,5 @@ const MirandaWorkflow: React.FC = () => {
     </div>
   );
 };
-async function translateMiranda(language: string): Promise<string> {
-  const mirandaText = `You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to an attorney. If you cannot afford an attorney, one will be provided for you.`;
-
-  if (language === 'english') return mirandaText;
-
-  try {
-    const response = await fetch('/api/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: mirandaText, targetLanguage: language }),
-    });
-    const data = await response.json();
-    return data.translatedText || mirandaText;
-  } catch {
-    return mirandaText;
-  }
-}
-
-import { voiceSynthesisService } from '../services/voice/VoiceSynthesisService';
-
-async function speakMiranda(text: string) {
-  try {
-    await voiceSynthesisService.speak(text);
-  } catch (err) {
-    console.error('Error speaking Miranda:', err);
-  }
-}
-
 
 export default MirandaWorkflow;

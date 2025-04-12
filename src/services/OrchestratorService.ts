@@ -160,15 +160,21 @@ class OrchestratorService {
   }
 
   private async routeToLLM(input: OrchestratorInput, intent: string, action: any): Promise<string> {
-    const retrievedSnippets = await this.retrieveKnowledge(input.content);
-    const history = this.conversationHistories[input.userId] || [];
-    const mappedHistory = history.map(m => ({ role: m.role, content: m.content }));
+    try {
+      const retrievedSnippets = await this.retrieveKnowledge(input.content);
+      const history = this.conversationHistories[input.userId] || [];
+      const mappedHistory = history.map(m => ({ role: m.role, content: m.content }));
 
-    const selected = this.selectLLM(intent);
-    console.log(`[Orchestrator] Routing to LLM: ${selected.name}`);
+      const selected = this.selectLLM(intent);
+      console.log(`[Orchestrator] Routing to LLM: ${selected.name}`);
 
-    const reply = await selected.client.generateReply(input.userId, mappedHistory, retrievedSnippets);
-    return reply;
+      const reply = await selected.client.generateReply(input.userId, mappedHistory, retrievedSnippets);
+      return reply;
+    } catch (error) {
+      console.error('[Orchestrator] LLM error:', error);
+      // Return a more graceful error message
+      return "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.";
+    }
   }
 
   private selectLLM(intent: string): { name: string; client: LLMClient } {

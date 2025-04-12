@@ -5,10 +5,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { reportText } = req.body;
-
-  if (!reportText) {
-    return res.status(400).json({ error: 'Missing reportText' });
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Missing OpenRouter API key on server. Please set OPENROUTER_API_KEY in your environment.' });
   }
 
   try {
@@ -16,20 +15,18 @@ module.exports = async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.VITE_OPENROUTER_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: 'quasar-alpha',
-        messages: [
-          {
-            role: 'user',
-            content: `Please review this report and provide feedback:\n\n${reportText}`
-          }
-        ]
-      })
+      body: JSON.stringify(req.body)
     });
 
-    const data = await response.json();
+    // Try to parse JSON, but handle empty or invalid responses gracefully
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      data = { error: 'Invalid or empty response from OpenRouter API.' };
+    }
 
     if (!response.ok) {
       return res.status(response.status).json({ error: data });
@@ -38,6 +35,6 @@ module.exports = async (req, res) => {
     return res.status(200).json(data);
   } catch (error) {
     console.error('Error calling OpenRouter API:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error contacting OpenRouter API.' });
   }
 };

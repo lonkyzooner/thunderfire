@@ -18,6 +18,7 @@ const authRoutes = require('./routes/auth');
 const subscriptionRoutes = require('./routes/subscription');
 const r2Routes = require('./routes/r2');
 const stripeWebhook = require('./routes/stripeWebhook');
+const translateRoutes = require('./routes/translate');
 
 // For caching responses
 const NodeCache = require('node-cache');
@@ -189,6 +190,27 @@ app.use('/api/groq', createProxyMiddleware({
     });
   }
 }));
+// OpenRouter proxy with improved error handling
+app.use('/api/openrouter', createProxyMiddleware({
+  target: 'https://openrouter.ai/api/v1',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/openrouter': ''
+  },
+  onProxyReq: (proxyReq) => {
+    proxyReq.setHeader('Authorization', `Bearer ${process.env.VITE_OPENROUTER_API_KEY}`);
+    proxyReq.setHeader('HTTP-Referer', 'http://localhost:8080'); // Required by OpenRouter
+    proxyReq.setHeader('X-Title', 'LARK App'); // Required by OpenRouter
+  },
+  onError: (err, req, res) => {
+    console.error('[OpenRouter] Proxy error:', err);
+    res.status(500).json({
+      error: 'OpenRouter service unavailable',
+      message: process.env.NODE_ENV === 'production' ? 'Service temporarily unavailable' : err.message
+    });
+  }
+}));
+
 
 // Hugging Face proxy with caching and improved error handling
 app.use('/api/huggingface', cacheResponse, createProxyMiddleware({
@@ -370,6 +392,7 @@ function gracefulShutdown() {
 app.use('/api/auth', authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/stripe', stripeWebhook);
+app.use('/api/translate', translateRoutes);
 app.use('/api/r2', r2Routes);
 
 // Health check endpoint with enhanced information
@@ -387,25 +410,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Start the server
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('Auth and subscription routes enabled');
-});
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
 });

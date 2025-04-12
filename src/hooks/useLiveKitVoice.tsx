@@ -46,7 +46,7 @@ export const useLiveKitVoice = () => {
       console.log(`[useLiveKitVoice] Speaking text (${voice || 'default voice'}): ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
       
       // Use the LiveKit voice service to speak the text
-      await liveKitVoiceService.speak(text, voice);
+      await liveKitVoiceService.speak(text, 'ash');
     } catch (err) {
       console.error('[useLiveKitVoice] Error speaking text:', err);
       setError(err instanceof Error ? err.message : 'Unknown error speaking text');
