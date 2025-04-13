@@ -1,7 +1,5 @@
 import React from 'react';
-import { Auth0Provider } from '@auth0/auth0-react';
-import { AuthProvider } from '../contexts/AuthContext';
-import { StripeAuthProvider } from './StripeAuthProvider';
+import { SupabaseAuthProvider } from './SupabaseAuthProvider';
 import auth0Config, { isAuth0Configured } from './auth0-config';
 
 interface AuthProviderWrapperProps {
@@ -58,25 +56,9 @@ export const AuthProviderWrapper: React.FC<AuthProviderWrapperProps> = ({ childr
   }
   
   return (
-    <Auth0Provider
-      domain={auth0Config.domain}
-      clientId={auth0Config.clientId}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-        audience: auth0Config.audience,
-        scope: 'openid profile email',
-        response_type: 'token id_token',
-        connection: 'Username-Password-Authentication'
-      }}
-      cacheLocation="localstorage"
-      useRefreshTokens={true}
-    >
-      <AuthProvider>
-        <StripeAuthProvider>
-          {children}
-        </StripeAuthProvider>
-      </AuthProvider>
-    </Auth0Provider>
+    <SupabaseAuthProvider>
+      {children}
+    </SupabaseAuthProvider>
   );
 };
 

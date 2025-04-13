@@ -14,6 +14,15 @@ LARK is a body-mounted AI assistant designed specifically for solo police office
 - Training mode
 - IoT integration with UniHiker M10 hardware
 
+## Supabase Authentication Integration
+
+- This project now uses [Supabase](https://supabase.com/) for authentication and user management.
+- The authentication context (`useAuth` from `src/contexts/DevAuthContext.tsx`) is now powered by Supabase.
+- All sign up, log in, and user profile management is handled via Supabase Auth.
+- Supabase credentials are configured in `.env` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+- The Supabase client is initialized in `src/services/supabaseClient.ts`.
+- To customize authentication flows, see `src/auth/SupabaseAuthProvider.tsx`.
+
 ## Deploying to Vercel
 
 There are several ways of editing your application.
