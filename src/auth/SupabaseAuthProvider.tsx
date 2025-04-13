@@ -16,6 +16,8 @@ interface SupabaseAuthContextType {
   hasFeature: (featureName: string) => boolean;
   hasSubscriptionTier: (minimumTier: SubscriptionTier) => boolean;
   refreshUserProfile: () => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
+  isEmailVerified: boolean;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType>({
@@ -31,6 +33,8 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType>({
   hasFeature: () => false,
   hasSubscriptionTier: () => false,
   refreshUserProfile: async () => {},
+  sendPasswordResetEmail: async () => {},
+  isEmailVerified: false,
 });
 
 const tierHierarchy: Record<SubscriptionTier, number> = {
@@ -46,6 +50,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
   // Fetch user profile from Supabase
   const fetchUserProfile = useCallback(async () => {
@@ -53,10 +58,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !sessionData.session) {
       setUser(null);
+      setIsEmailVerified(false);
       setIsLoading(false);
       return;
     }
     const { user: supabaseUser } = sessionData.session;
+    setIsEmailVerified(!!supabaseUser?.email_confirmed_at);
     // Example: fetch additional profile data from a 'profiles' table
     const { data: profileData } = await supabase
       .from('profiles')
@@ -117,6 +124,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       handleError({ message: error.message, source: 'SupabaseAuth', recoverable: true });
     }
     setUser(null);
+    setIsEmailVerified(false);
     setIsLoading(false);
   }, [handleError]);
 
@@ -143,6 +151,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     await fetchUserProfile();
     return true;
   }, [user, fetchUserProfile, handleError]);
+
+  // Send password reset email
+  const sendPasswordResetEmail = useCallback(async (email: string) => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) {
+      setError(error);
+      handleError({ message: error.message, source: 'SupabaseAuth', recoverable: true });
+    }
+    setIsLoading(false);
+  }, [handleError]);
 
   // Check if user has a specific feature
   const hasFeature = useCallback((featureName: string): boolean => {
@@ -189,7 +208,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     updateUserProfile,
     hasFeature,
     hasSubscriptionTier,
-    refreshUserProfile
+    refreshUserProfile,
+    sendPasswordResetEmail,
+    isEmailVerified
   };
 
   return (
