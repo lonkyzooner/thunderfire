@@ -7,6 +7,7 @@ export interface UserProfile {
   sub: string;
   email: string;
   name: string;
+  rank?: string;
   picture?: string;
   departmentId?: string;
   badgeNumber?: string;

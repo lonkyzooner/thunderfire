@@ -6,8 +6,10 @@ import SubscriptionPage from '../pages/SubscriptionPage';
 import StripePricingPage from '../pages/StripePricingPage';
 import LandingPage from '../pages/LandingPage';
 import AccountPage from '../pages/AccountPage';
-import StripeLoginPage from '../pages/StripeLoginPage';
+import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
+import SignupPage from '../pages/SignupPage';
+import OnboardingPage from '../pages/OnboardingPage';
 import { useStripeAuth } from '../auth/StripeAuthProvider';
 
 
@@ -40,9 +42,16 @@ export const AppRouter: React.FC = () => {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<StripeLoginPage />} />
-        
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/pricing" element={<StripePricingPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard" element={
+          // Example: wrap with ProtectedRoute if needed
+          // <ProtectedRoute><DashboardPage /></ProtectedRoute>
+          <DashboardPage />
+        } />
         {/* Protected routes */}
         <Route path="/dashboard" element={
           <RouteGuard>

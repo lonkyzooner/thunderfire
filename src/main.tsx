@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
 import { StripeAuthProvider } from './auth/StripeAuthProvider'
+import { AuthProvider } from './contexts/DevAuthContext'
 import { StripeProvider } from './contexts/StripeContext'
 import AppRouter from './router/AppRouter'
 import { ContextProvider } from './contexts/ContextProvider'
@@ -21,7 +22,9 @@ if (rootElement) {
       <StripeAuthProvider>
         <StripeProvider>
           <ContextProvider>
-            <AppRouter />
+            <AuthProvider>
+              <AppRouter />
+            </AuthProvider>
           </ContextProvider>
         </StripeProvider>
       </StripeAuthProvider>

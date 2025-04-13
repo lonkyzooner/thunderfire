@@ -91,30 +91,44 @@ const StripePricingPage: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-950">
       <h2 className="text-3xl font-bold text-white mb-8">Choose Your Plan</h2>
-      <div className="flex flex-wrap gap-8 justify-center">
-        {subscriptionTiers.map((tier) => (
-          <Card key={tier.id} className={`w-80 ${tier.recommended ? 'border-2 border-blue-400' : ''}`}>
-            <CardHeader>
-              <CardTitle className="text-2xl">{tier.name}</CardTitle>
-              <CardDescription className="text-lg text-blue-300">${tier.price}/mo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="mb-4">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-center text-white">
-                    <Check className="w-4 h-4 mr-2 text-green-400" /> {feature}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => handleSubscription(tier)}>
-                {tier.buttonText}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {!user ? (
+        <div className="flex flex-col items-center">
+          <p className="text-white mb-4">Please sign up or log in to select a plan.</p>
+          <div className="flex gap-4">
+            <a href="/signup">
+              <Button>Sign Up</Button>
+            </a>
+            <a href="/login">
+              <Button variant="outline" className="text-white border-white">Log In</Button>
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-8 justify-center">
+          {subscriptionTiers.map((tier) => (
+            <Card key={tier.id} className={`w-80 ${tier.recommended ? 'border-2 border-blue-400' : ''}`}>
+              <CardHeader>
+                <CardTitle className="text-2xl">{tier.name}</CardTitle>
+                <CardDescription className="text-lg text-blue-300">${tier.price}/mo</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="mb-4">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-center text-white">
+                      <Check className="w-4 h-4 mr-2 text-green-400" /> {feature}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={() => handleSubscription(tier)}>
+                  {tier.buttonText}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
