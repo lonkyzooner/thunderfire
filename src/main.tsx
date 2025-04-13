@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { StripeAuthProvider } from './auth/StripeAuthProvider'
 import { StripeProvider } from './contexts/StripeContext'
 import AppRouter from './router/AppRouter'
+import { ContextProvider } from './contexts/ContextProvider'
 import './index.css'
 import './styles/globals.css'
 
@@ -19,7 +20,9 @@ if (rootElement) {
     <StrictMode>
       <StripeAuthProvider>
         <StripeProvider>
-          <AppRouter />
+          <ContextProvider>
+            <AppRouter />
+          </ContextProvider>
         </StripeProvider>
       </StripeAuthProvider>
     </StrictMode>

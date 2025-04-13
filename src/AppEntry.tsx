@@ -1,5 +1,6 @@
 import React from 'react';
 import App from './App';
+import { ContextProvider } from './contexts/ContextProvider';
 
 /**
  * App Entry Component
@@ -7,7 +8,11 @@ import App from './App';
  * This component serves as the entry point for the LARK application.
  */
 function AppEntry() {
-  return <App />;
+  return (
+    <ContextProvider>
+      <App />
+    </ContextProvider>
+  );
 }
 
 export default AppEntry;

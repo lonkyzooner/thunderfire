@@ -12,10 +12,14 @@ import {
   QuasarClient
 } from './llmClients';
 import { toolManager } from './ToolManager';
+import { ContextManager } from './ContextManager';
+import { logSystem, logCompliance, logAnalytics } from '../lib/auditLogger';
+import { WorkflowManager, WorkflowEvent, SuggestedAction, WorkflowState } from './WorkflowManager';
 
 type InputType = 'voice' | 'text' | 'ui';
 
 interface OrchestratorInput {
+  orgId: string;
   userId: string;
   type: InputType;
   content: string;
@@ -23,6 +27,7 @@ interface OrchestratorInput {
 }
 
 interface OrchestratorResponse {
+  orgId: string;
   userId: string;
   type: 'text' | 'voice' | 'action';
   content: string;
@@ -57,6 +62,7 @@ class OrchestratorService {
   private mirandaLogs: Record<string, MirandaLog[]> = {};
 
   constructor() {
+    logSystem('OrchestratorServiceInitialized', { message: 'Orchestrator initialized' });
     console.log('[Orchestrator] Initialized');
     this.llmClient = new OpenAIClient(import.meta.env.VITE_OPENAI_API_KEY);
 
@@ -93,6 +99,16 @@ class OrchestratorService {
 
   receiveInput(input: OrchestratorInput): void {
     console.log('[Orchestrator] Received input:', input);
+    ContextManager.addMessage(input.orgId, input.userId, input.type === 'ui' ? 'system' : 'user', input.content);
+    logAnalytics('UserInputReceived', { inputType: input.type, content: input.content, metadata: input.metadata }, input.userId, undefined, undefined, input.orgId);
+
+    // Integrate WorkflowManager: log the event for workflow tracking
+    const workflowEvent: WorkflowEvent = {
+      type: input.type,
+      payload: { content: input.content, metadata: input.metadata },
+      timestamp: Date.now(),
+    };
+    WorkflowManager.handleEvent(input.orgId, input.userId, workflowEvent);
 
     if (!this.conversationHistories[input.userId]) {
       this.conversationHistories[input.userId] = [];
@@ -107,34 +123,48 @@ class OrchestratorService {
     this.processInput(input);
   }
 
+  // Expose workflow state and suggestions for UI
+  getWorkflowState(orgId: string, userId: string): WorkflowState | null {
+    return WorkflowManager.getCurrentWorkflowState(orgId, userId);
+  }
+
+  getWorkflowSuggestions(orgId: string, userId: string): SuggestedAction[] {
+    return WorkflowManager.suggestNextActions(orgId, userId);
+  }
+
   private async processInput(input: OrchestratorInput): Promise<void> {
-    console.log('[Orchestrator] Processing input:', input);
+    logSystem('ProcessInputStart', { input }, undefined, input.orgId);
+    try {
+      const intent = await this.classifyIntent(input);
 
-    const intent = await this.classifyIntent(input);
+      const action = await this.decideNextAction(input, intent);
 
-    const action = await this.decideNextAction(input, intent);
-
-    switch (action.type) {
-      case 'statute_search':
-        this.handleStatuteSearch(input.userId, input.content);
-        break;
-      case 'miranda':
-        this.handleMiranda(input.userId, action.language || 'english');
-        break;
-      case 'tool_use':
-        await this.invokeTool(input, intent, action);
-        break;
-      case 'llm_response':
-      default:
-        const reply = await this.routeToLLM(input, intent, action);
-        const textResponse: OrchestratorResponse = {
-          userId: input.userId,
-          type: 'text',
-          content: reply,
-        };
-        this.emitResponse(textResponse);
-        this.speakWithLiveKit(input.userId, reply);
-        break;
+      switch (action.type) {
+        case 'statute_search':
+          this.handleStatuteSearch(input.orgId, input.userId, input.content);
+          break;
+        case 'miranda':
+          this.handleMiranda(input.orgId, input.userId, action.language || 'english');
+          break;
+        case 'tool_use':
+          await this.invokeTool(input, intent, action);
+          break;
+        case 'llm_response':
+        default:
+          const reply = await this.routeToLLM(input, intent, action);
+          const textResponse: OrchestratorResponse = {
+            orgId: input.orgId,
+            userId: input.userId,
+            type: 'text',
+            content: reply,
+          };
+          this.emitResponse(textResponse);
+          this.speakWithLiveKit(input.userId, reply);
+          break;
+      }
+    } catch (err: any) {
+      logSystem('ProcessInputError', { error: err?.message || err, input }, undefined, input.orgId);
+      throw err;
     }
   }
 
@@ -207,6 +237,7 @@ class OrchestratorService {
       const result = await toolManager.invokeTool(toolId, params);
 
       const response: OrchestratorResponse = {
+        orgId: input.orgId,
         userId: input.userId,
         type: 'text',
         content: result,
@@ -215,6 +246,7 @@ class OrchestratorService {
     } catch (error) {
       console.error('[Orchestrator] Tool invocation error:', error);
       const response: OrchestratorResponse = {
+        orgId: input.orgId,
         userId: input.userId,
         type: 'text',
         content: 'Sorry, I encountered an error executing the tool.',
@@ -230,7 +262,7 @@ class OrchestratorService {
     return null;
   }
 
-  private handleStatuteSearch(userId: string, query: string) {
+  private handleStatuteSearch(orgId: string, userId: string, query: string) {
     const lowerQuery = query.toLowerCase();
 
     const match = this.statutes.find(s =>
@@ -247,6 +279,7 @@ class OrchestratorService {
     }
 
     const response: OrchestratorResponse = {
+      orgId,
       userId,
       type: 'text',
       content: responseText,
@@ -256,7 +289,7 @@ class OrchestratorService {
     this.speakWithLiveKit(userId, responseText, true);
   }
 
-  private async handleMiranda(userId: string, language: string) {
+  private async handleMiranda(orgId: string, userId: string, language: string) {
     const mirandaEnglish = "You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to an attorney. If you cannot afford an attorney, one will be provided for you. Do you understand these rights?";
 
     const translated = language === 'english'
@@ -265,6 +298,7 @@ class OrchestratorService {
 
     // Log the Miranda delivery
     if (!this.mirandaLogs[userId]) {
+      ContextManager.addAction(orgId, userId, 'MirandaRightsDelivered', { language, text: translated });
       this.mirandaLogs[userId] = [];
     }
     this.mirandaLogs[userId].push({
@@ -272,8 +306,10 @@ class OrchestratorService {
       language,
       text: translated,
     });
+    logCompliance('MirandaRightsDelivered', { language, text: translated }, userId, undefined, undefined, orgId);
 
     const response: OrchestratorResponse = {
+      orgId,
       userId,
       type: 'text',
       content: translated,
@@ -300,6 +336,7 @@ class OrchestratorService {
       await liveKitVoiceService.speak(text, 'ash', undefined, forceLiveKit);
 
       const voiceResponse: OrchestratorResponse = {
+        orgId: '', // orgId not available in this context, set to empty or refactor as needed
         userId,
         type: 'voice',
         content: text,

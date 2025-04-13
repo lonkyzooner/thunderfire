@@ -18,6 +18,10 @@ interface LiveKitVoiceContextType {
   micPermission: MicrophonePermission;
   requestMicrophonePermission: () => Promise<boolean>;
   
+  // Input mode: 'voice' or 'text'
+  inputMode: 'voice' | 'text';
+  setInputMode: (mode: 'voice' | 'text') => void;
+  
   // Actions
   connect: (roomName?: string, requireMicrophone?: boolean) => Promise<boolean | undefined>;
   disconnect: () => void;
@@ -38,6 +42,8 @@ const LiveKitVoiceContext = createContext<LiveKitVoiceContextType>({
   roomName: '',
   micPermission: 'unknown',
   requestMicrophonePermission: async () => false,
+  inputMode: 'text',
+  setInputMode: () => {},
   connect: async () => undefined,
   disconnect: () => {},
   speak: async () => {},
@@ -58,6 +64,7 @@ export const LiveKitVoiceProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [roomName, setRoomName] = useState<string>('');
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [inputMode, setInputMode] = useState<'voice' | 'text'>('text');
   const [userId] = useState<string>(uuidv4());
   const [micPermission, setMicPermission] = useState<MicrophonePermission>('unknown');
   const [error, setError] = useState<any | null>(null);
@@ -281,7 +288,9 @@ export const LiveKitVoiceProvider: React.FC<{ children: React.ReactNode }> = ({ 
     speakWithOpenAIFallback,
     stopSpeaking,
     debugInfo,
-    error
+    error,
+    inputMode,
+    setInputMode
   };
 
   return (

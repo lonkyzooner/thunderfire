@@ -87,98 +87,133 @@ const MirandaWorkflow: React.FC = () => {
     // Optionally send to backend here
   };
 
+  // Collapsible sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div className="p-4 space-y-6 bg-white/90 rounded-2xl shadow border border-gray-200 w-full">
-      {step === 1 && (
-        <div className="space-y-5">
-          <h2 className="text-lg font-semibold mb-2">Miranda Workflow</h2>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Language</label>
-            <select
-              value={language}
-              onChange={e => setLanguage(e.target.value)}
-              className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
-            >
-              <option value="english">English</option>
-              <option value="spanish">Spanish</option>
-              <option value="french">French</option>
-              <option value="vietnamese">Vietnamese</option>
-              <option value="mandarin">Mandarin</option>
-              <option value="arabic">Arabic</option>
-              <option value="other">Other</option>
-            </select>
-            {language === 'other' && (
+    <aside
+      className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'max-w-md w-full' : 'max-w-xs w-16'} bg-white/90 rounded-2xl shadow border border-gray-200`}
+      aria-label="Miranda Workflow Sidebar"
+    >
+      <button
+        className="absolute left-2 top-2 z-10 bg-blue-100 hover:bg-blue-200 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        aria-label={sidebarOpen ? "Collapse Miranda Workflow Sidebar" : "Expand Miranda Workflow Sidebar"}
+        aria-expanded={sidebarOpen}
+        onClick={() => setSidebarOpen((open) => !open)}
+        tabIndex={0}
+      >
+        <span aria-hidden="true">{sidebarOpen ? "⏴" : "⏵"}</span>
+      </button>
+      <div className={`p-4 space-y-6 ${sidebarOpen ? '' : 'hidden'}`}>
+        {step === 1 && (
+          <form className="space-y-5" autoComplete="off">
+            <h2 className="text-lg font-semibold mb-2">Miranda Workflow</h2>
+            <div className="space-y-2">
+              <label htmlFor="miranda-language" className="block text-sm font-medium">Language</label>
+              <select
+                id="miranda-language"
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+              >
+                <option value="english">English</option>
+                <option value="spanish">Spanish</option>
+                <option value="french">French</option>
+                <option value="vietnamese">Vietnamese</option>
+                <option value="mandarin">Mandarin</option>
+                <option value="arabic">Arabic</option>
+                <option value="other">Other</option>
+              </select>
+              {language === 'other' && (
+                <>
+                  <label htmlFor="miranda-custom-language" className="block text-sm font-medium">Custom Language</label>
+                  <input
+                    id="miranda-custom-language"
+                    type="text"
+                    value={customLanguage}
+                    onChange={e => setCustomLanguage(e.target.value)}
+                    placeholder="Enter language (e.g., Russian, Hindi)"
+                    className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all mt-2"
+                  />
+                </>
+              )}
+            </div>
+            <div>
+              <label htmlFor="miranda-suspect-name" className="block text-sm font-medium">Suspect Name</label>
               <input
-                type="text"
-                value={customLanguage}
-                onChange={e => setCustomLanguage(e.target.value)}
-                placeholder="Enter language (e.g., Russian, Hindi)"
-                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all mt-2"
+                id="miranda-suspect-name"
+                value={suspectName}
+                onChange={e => setSuspectName(e.target.value)}
+                placeholder="Suspect Name"
+                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
               />
-            )}
+            </div>
+            <div>
+              <label htmlFor="miranda-dob" className="block text-sm font-medium">Date of Birth</label>
+              <input
+                id="miranda-dob"
+                value={dob}
+                onChange={e => setDob(e.target.value)}
+                placeholder="Date of Birth"
+                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="miranda-case-number" className="block text-sm font-medium">Case Number</label>
+              <input
+                id="miranda-case-number"
+                value={caseNumber}
+                onChange={e => setCaseNumber(e.target.value)}
+                placeholder="Case Number"
+                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+              />
+            </div>
+            {error && <div className="text-red-600 text-sm">{error}</div>}
+            <button
+              type="button"
+              onClick={handleTranslateAndSpeak}
+              className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isSpeaking}
+            >
+              {isSpeaking ? <span className="animate-pulse">Speaking...</span> : <span>Start Miranda Rights</span>}
+            </button>
+          </form>
+        )}
+        {step === 2 && (
+          <div className="space-y-5">
+            <h2 className="text-lg font-semibold mb-2">Miranda Rights (Review)</h2>
+            <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-2 text-base font-medium text-foreground">
+              <p>{translation}</p>
+            </div>
+            <button
+              onClick={handleLog}
+              className="w-full py-3 rounded-md font-heading font-bold text-base bg-green-600 hover:bg-green-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              Complete and Log
+            </button>
           </div>
-          <input
-            value={suspectName}
-            onChange={e => setSuspectName(e.target.value)}
-            placeholder="Suspect Name"
-            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
-          />
-          <input
-            value={dob}
-            onChange={e => setDob(e.target.value)}
-            placeholder="Date of Birth"
-            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
-          />
-          <input
-            value={caseNumber}
-            onChange={e => setCaseNumber(e.target.value)}
-            placeholder="Case Number"
-            className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
-          />
-          {error && <div className="text-red-600 text-sm">{error}</div>}
-          <button
-            onClick={handleTranslateAndSpeak}
-            className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200"
-            disabled={isSpeaking}
-          >
-            {isSpeaking ? <span className="animate-pulse">Speaking...</span> : <span>Start Miranda Rights</span>}
-          </button>
-        </div>
-      )}
-      {step === 2 && (
-        <div className="space-y-5">
-          <h2 className="text-lg font-semibold mb-2">Miranda Rights (Review)</h2>
-          <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-2 text-base font-medium text-foreground">
-            <p>{translation}</p>
+        )}
+        {step === 3 && (
+          <div className="space-y-5">
+            <h2 className="text-lg font-semibold mb-2">Miranda Rights Logged</h2>
+            <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-1 text-base font-medium text-foreground">
+              <p>Suspect: {suspectName}</p>
+              <p>DOB: {dob}</p>
+              <p>Case #: {caseNumber}</p>
+              <p>Timestamp: {new Date().toLocaleString()}</p>
+              <p>Language: {language === 'other' ? customLanguage.trim() : language}</p>
+              <p>Translation: {translation}</p>
+            </div>
+            <button
+              onClick={() => setStep(1)}
+              className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              New Miranda Event
+            </button>
           </div>
-          <button
-            onClick={handleLog}
-            className="w-full py-3 rounded-md font-heading font-bold text-base bg-green-600 hover:bg-green-700 text-white shadow transition-all duration-200"
-          >
-            Complete and Log
-          </button>
-        </div>
-      )}
-      {step === 3 && (
-        <div className="space-y-5">
-          <h2 className="text-lg font-semibold mb-2">Miranda Rights Logged</h2>
-          <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-1 text-base font-medium text-foreground">
-            <p>Suspect: {suspectName}</p>
-            <p>DOB: {dob}</p>
-            <p>Case #: {caseNumber}</p>
-            <p>Timestamp: {new Date().toLocaleString()}</p>
-            <p>Language: {language === 'other' ? customLanguage.trim() : language}</p>
-            <p>Translation: {translation}</p>
-          </div>
-          <button
-            onClick={() => setStep(1)}
-            className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200"
-          >
-            New Miranda Event
-          </button>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </aside>
   );
 };
 

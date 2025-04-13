@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardCard from '../components/DashboardCard';
+import { useUserDepartment } from '../contexts/UserDepartmentContext';
 import { useStripe } from '../contexts/StripeContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
@@ -7,6 +9,7 @@ import { CheckCircle2, ArrowRight, Shield } from 'lucide-react';
 import App from '../App';
 
 const DashboardPage: React.FC = () => {
+  const { user, department } = useUserDepartment();
   const location = useLocation();
   const navigate = useNavigate();
   const { subscriptionTier } = useStripe();
@@ -76,7 +79,7 @@ const DashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
           <div className="flex items-center gap-3">
             <div className="bg-white/10 p-2 rounded-lg">
-              <Shield className="h-6 w-6 text-white" />
+              <img src="/lark-logo.svg" alt="LARK Logo" className="h-14 w-14" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-wide"></h1>

@@ -3,11 +3,25 @@ const Schema = mongoose.Schema;
 
 // This model tracks detailed usage of LARK's law enforcement features
 const UsageLogSchema = new Schema({
+  // Multi-tenant: Organization/Department ID (required)
+  orgId: {
+    type: String,
+    required: true,
+    index: true,
+    trim: true,
+    description: 'Unique organization/department/tenant ID'
+  },
   // Link to user
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  // User role at time of log (for analytics/audit)
+  role: {
+    type: String,
+    enum: ['officer', 'supervisor', 'admin', 'dispatch'],
+    description: 'User role at time of action'
   },
   
   // Feature used
@@ -85,6 +99,6 @@ const UsageLogSchema = new Schema({
 });
 
 // Index for faster queries by user and feature type
-UsageLogSchema.index({ userId: 1, featureType: 1, createdAt: -1 });
+UsageLogSchema.index({ orgId: 1, userId: 1, featureType: 1, createdAt: -1 });
 
 module.exports = mongoose.model('UsageLog', UsageLogSchema);

@@ -1,183 +1,146 @@
+/**
+ * Auth API routes for multi-tenant LARK backend.
+ * - Login (returns JWT with orgId, userId, role)
+ * - Register (admin creates new users under their orgId)
+ */
+
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const router = express.Router();
-const { auth } = require('express-oauth2-jwt-bearer');
-const NodeCache = require('node-cache');
-const axios = require('axios');
 
-// Cache for user profiles (30 min TTL)
-const userProfileCache = new NodeCache({ stdTTL: 1800 });
+const { requireAdmin } = require('../middleware/auth');
 
-// Configure Auth0 middleware
-const jwtCheck = auth({
-  audience: process.env.AUTH0_AUDIENCE,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  tokenSigningAlg: 'RS256'
+// TODO: Replace with your user model and secure password handling
+const User = require('../src/database/models/User');
+const Org = require('../src/database/models/Org');
+
+// Login endpoint
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  // Require orgId in login request for multi-tenancy
+  const { orgId } = req.body;
+  if (!orgId) {
+    return res.status(400).json({ error: 'Organization ID is required' });
+  }
+  const user = await User.findOne({ orgId, email });
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const passwordMatch = await bcrypt.compare(password, user.password);
+  if (!passwordMatch) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  // Issue JWT with orgId, userId, role
+  const token = jwt.sign(
+    { orgId: user.orgId, userId: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '12h' }
+  );
+  res.json({ token, user: { orgId: user.orgId, userId: user._id, role: user.role, email: user.email } });
 });
 
-// Auth0 Management API helper
-const getManagementApiToken = async () => {
-  try {
-    const response = await axios.post(
-      `${process.env.AUTH0_ISSUER_BASE_URL}/oauth/token`,
-      {
-        client_id: process.env.AUTH0_MANAGEMENT_CLIENT_ID,
-        client_secret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET,
-        audience: `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/`,
-        grant_type: 'client_credentials'
-      }
-    );
-    
-    return response.data.access_token;
-  } catch (error) {
-    console.error('Error getting Auth0 management token:', error);
-    throw error;
+// Register endpoint (admin only)
+router.post('/register', requireAdmin, async (req, res) => {
+  // orgId is set by requireAdmin middleware from JWT
+  const orgId = req.orgId;
+  const { email, password, role } = req.body;
+  if (!email || !password || !role) {
+    return res.status(400).json({ error: 'Email, password, and role are required' });
   }
-};
-
-// Get user from Auth0 Management API
-const getUserFromAuth0 = async (userId) => {
-  try {
-    const token = await getManagementApiToken();
-    
-    const response = await axios.get(
-      `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/users/${userId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-    
-    return response.data;
-  } catch (error) {
-    console.error('Error getting user from Auth0:', error);
-    throw error;
+  // Check if user already exists
+  const existing = await User.findOne({ orgId, email });
+  if (existing) {
+    return res.status(409).json({ error: 'User already exists' });
   }
-};
-
-// Get user metadata from database
-const getUserMetadata = async (userId) => {
-  // This would normally query your database
-  // For now, we'll return mock data
-  return {
-    departmentId: 'LAPD-12345',
-    badgeNumber: 'B-9876',
-    role: 'patrol',
-    subscriptionTier: 'standard',
-    subscriptionStatus: 'active',
-    subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    features: ['voice_control', 'threat_detection', 'miranda_rights', 'statute_lookup'],
-    apiQuota: {
-      total: 1000,
-      used: 150,
-      reset: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    metadata: {
-      preferredVoice: 'ash',
-      uiTheme: 'dark',
-      deviceId: 'UniHiker-M10-98765'
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = new User({ orgId, email, password: hashedPassword, role });
+  await user.save();
+  res.status(201).json({ user: { orgId, email, role } });
+});
+// Public registration endpoint for self-service signup
+router.post('/register-public', async (req, res) => {
+  try {
+    const { name, email, password, department, rank, inviteCode, plan } = req.body;
+    if (!name || !email || !password || !department || !rank) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
-  };
-};
-
-// Routes
-// Check if authenticated
-router.get('/check', jwtCheck, (req, res) => {
-  res.json({ authenticated: true });
-});
-
-// Get user profile
-router.get('/user/profile', jwtCheck, async (req, res) => {
-  try {
-    const userId = req.auth.payload.sub;
-    
-    // Check cache first
-    const cachedProfile = userProfileCache.get(userId);
-    if (cachedProfile) {
-      return res.json(cachedProfile);
+    // Basic email format check
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
     }
-    
-    // Get user from Auth0
-    const auth0User = await getUserFromAuth0(userId);
-    
-    // Get user metadata from database
-    const userMetadata = await getUserMetadata(userId);
-    
-    // Combine data
-    const userProfile = {
-      sub: auth0User.user_id,
-      email: auth0User.email,
-      name: auth0User.name,
-      picture: auth0User.picture,
-      email_verified: auth0User.email_verified,
-      ...userMetadata
-    };
-    
-    // Cache the profile
-    userProfileCache.set(userId, userProfile);
-    
-    res.json(userProfile);
-  } catch (error) {
-    console.error('Error getting user profile:', error);
-    res.status(500).json({ error: 'Failed to get user profile' });
-  }
-});
 
-// Update user profile
-router.patch('/user/profile', jwtCheck, async (req, res) => {
-  try {
-    const userId = req.auth.payload.sub;
-    const updates = req.body;
-    
-    // Validate updates
-    const allowedUpdates = ['departmentId', 'badgeNumber', 'metadata'];
-    const filteredUpdates = {};
-    
-    Object.keys(updates).forEach(key => {
-      if (allowedUpdates.includes(key)) {
-        filteredUpdates[key] = updates[key];
+    let org;
+    if (inviteCode) {
+      org = await Org.findOne({ inviteCode });
+      if (!org) {
+        return res.status(400).json({ error: 'Invalid invite code' });
+      }
+    } else {
+      // Generate a unique invite code
+      function generateInviteCode(length = 8) {
+        return Math.random().toString(36).substr(2, length).toUpperCase();
+      }
+      const newInviteCode = generateInviteCode();
+      // Ensure org name is unique
+      const existingOrg = await Org.findOne({ name: department });
+      if (existingOrg) {
+        return res.status(409).json({ error: 'Organization name already exists' });
+      }
+      org = new Org({ name: department, inviteCode: newInviteCode });
+      await org.save();
+    }
+
+    // Check for existing user in org
+    const existingUser = await User.findOne({ orgId: org._id.toString(), email });
+    if (existingUser) {
+      return res.status(409).json({ error: 'User already exists in this organization' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = new User({
+      orgId: org._id.toString(),
+      name,
+      email,
+      password: hashedPassword,
+      rank,
+      role: "officer", // Default role for self-signup
+      // plan is not in User schema, but could be handled elsewhere
+    });
+    await user.save();
+
+    // Issue JWT
+    const token = jwt.sign(
+      { orgId: org._id.toString(), userId: user._id.toString(), role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    res.status(201).json({
+      token,
+      user: {
+        orgId: org._id.toString(),
+        userId: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        rank: user.rank,
+        role: user.role
+      },
+      org: {
+        orgId: org._id.toString(),
+        name: org.name,
+        inviteCode: org.inviteCode
       }
     });
-    
-    // Update user in database
-    // This would normally update your database
-    // For now, we'll just return the updates
-    
-    // Clear cache
-    userProfileCache.del(userId);
-    
-    res.json({
-      ...filteredUpdates,
-      updated: true
-    });
-  } catch (error) {
-    console.error('Error updating user profile:', error);
-    res.status(500).json({ error: 'Failed to update user profile' });
-  }
-});
-
-// Get user permissions
-router.get('/user/permissions', jwtCheck, async (req, res) => {
-  try {
-    const userId = req.auth.payload.sub;
-    
-    // Get user metadata from database
-    const userMetadata = await getUserMetadata(userId);
-    
-    // Extract permissions based on subscription tier and features
-    const permissions = {
-      canAccessVoiceControl: userMetadata.features.includes('voice_control'),
-      canAccessThreatDetection: userMetadata.features.includes('threat_detection'),
-      canAccessMirandaRights: userMetadata.features.includes('miranda_rights'),
-      canAccessStatuteLookup: userMetadata.features.includes('statute_lookup'),
-      maxApiCalls: userMetadata.apiQuota.total,
-      remainingApiCalls: userMetadata.apiQuota.total - userMetadata.apiQuota.used
-    };
-    
-    res.json(permissions);
-  } catch (error) {
-    console.error('Error getting user permissions:', error);
-    res.status(500).json({ error: 'Failed to get user permissions' });
+  } catch (err) {
+    res.status(500).json({ error: 'Registration failed', details: err.message });
   }
 });
 

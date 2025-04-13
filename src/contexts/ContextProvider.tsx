@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { UserDepartmentProvider } from './UserDepartmentContext';
 
 interface ContextData {
   location: string | null;
@@ -44,18 +45,20 @@ export const ContextProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <Context.Provider value={{
-      location,
-      time,
-      caseNumber,
-      conversationHistory,
-      setConversationHistory,
-      preferences,
-      setPreferences,
-      ongoingTasks,
-      setOngoingTasks
-    }}>
-      {children}
-    </Context.Provider>
+    <UserDepartmentProvider>
+      <Context.Provider value={{
+        location,
+        time,
+        caseNumber,
+        conversationHistory,
+        setConversationHistory,
+        preferences,
+        setPreferences,
+        ongoingTasks,
+        setOngoingTasks
+      }}>
+        {children}
+      </Context.Provider>
+    </UserDepartmentProvider>
   );
 };

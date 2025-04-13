@@ -1,5 +1,6 @@
 // App.tsx - LARK Voice Assistant
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useUserDepartment } from './contexts/UserDepartmentContext';
 import './styles/voice-assistant.css';
 import ConversationalAgent from './components/ConversationalAgent';
 import './styles/fluid-theme.css';
@@ -29,6 +30,9 @@ function App() {
   const [connected, setConnected] = useState(true);
   const [location, setLocation] = useState('Baton Rouge, LA');
 
+  // Use user/department context
+  const { user, department } = useUserDepartment();
+
   // Update time every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -56,18 +60,18 @@ function App() {
   // Layout for widgets (x, y, w, h are grid units)
   const layouts = {
     lg: [
-      { i: "map", x: 0, y: 0, w: 6, h: 8, minW: 3, minH: 6 },
-      { i: "chat", x: 6, y: 0, w: 6, h: 8, minW: 3, minH: 6 },
-      { i: "report", x: 0, y: 8, w: 6, h: 8, minW: 3, minH: 6 },
-      { i: "miranda", x: 6, y: 8, w: 3, h: 8, minW: 2, minH: 6 },
-      { i: "statutes", x: 9, y: 8, w: 3, h: 8, minW: 2, minH: 6 },
+      { i: "map", x: 0, y: 0, w: 4, h: 8, minW: 3, minH: 6 },
+      { i: "chat", x: 4, y: 0, w: 8, h: 16, minW: 6, minH: 8 },
+      { i: "report", x: 0, y: 8, w: 4, h: 8, minW: 2, minH: 6 },
+      { i: "miranda", x: 0, y: 16, w: 4, h: 8, minW: 2, minH: 6 },
+      { i: "statutes", x: 0, y: 24, w: 4, h: 8, minW: 2, minH: 6 },
     ],
     md: [
-      { i: "map", x: 0, y: 0, w: 6, h: 8 },
-      { i: "chat", x: 6, y: 0, w: 6, h: 8 },
-      { i: "report", x: 0, y: 8, w: 6, h: 8 },
-      { i: "miranda", x: 6, y: 8, w: 3, h: 8 },
-      { i: "statutes", x: 9, y: 8, w: 3, h: 8 },
+      { i: "map", x: 0, y: 0, w: 4, h: 8 },
+      { i: "chat", x: 4, y: 0, w: 8, h: 16 },
+      { i: "report", x: 0, y: 8, w: 4, h: 8 },
+      { i: "miranda", x: 0, y: 16, w: 4, h: 8 },
+      { i: "statutes", x: 0, y: 24, w: 4, h: 8 },
     ],
     sm: [
       { i: "map", x: 0, y: 0, w: 12, h: 8 },
@@ -105,12 +109,23 @@ function App() {
           />
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4 py-3">
             <div className="flex items-center gap-4">
-              <LarkLogo width={52} height={52} className="mr-1 drop-shadow-lg" />
+              {department.logoUrl ? (
+                <img
+                  src={department.logoUrl}
+                  alt={department.name + " Logo"}
+                  width={52}
+                  height={52}
+                  className="mr-1 drop-shadow-lg rounded-full bg-white border border-primary"
+                />
+              ) : (
+                <LarkLogo width={52} height={52} className="mr-1 drop-shadow-lg rounded-full bg-white border border-primary" />
+              )}
               <div>
                 <h1 className="text-4xl md:text-5xl font-heading font-extrabold tracking-tight leading-none flex items-center text-[hsl(var(--primary))] drop-shadow-sm">
-                  <span className="fluid-heading">LARK</span>
+                  <span className="fluid-heading">{department.name}</span>
                   <span className="ml-3 text-xs font-semibold fluid-badge px-2 py-1 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white shadow">
-                    1.0
+                    {/* Optionally show version or department code */}
+                    {/* 1.0 */}
                   </span>
                 </h1>
                 <p className="text-muted-foreground text-base font-light tracking-wide mt-1">
@@ -171,6 +186,17 @@ function App() {
                     <span className="text-xs font-bold text-destructive">Offline</span>
                   </div>
                 )}
+                {/* User personalization */}
+                <div className="flex items-center gap-2 ml-4">
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name + " Avatar"}
+                    className="w-9 h-9 rounded-full border-2 border-primary shadow"
+                  />
+                  <span className="font-semibold text-base text-foreground">{user.name}</span>
+                  <div className="relative group">
+                  </div>
+                </div>
               </div>
             </div>
           </div>

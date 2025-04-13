@@ -1,4 +1,10 @@
 // ConversationalAgent.tsx
+import { toast } from "./ui/use-toast";
+import { Skeleton } from "./ui/skeleton";
+import { useEffect } from "react";
+import { Mic, StopCircle } from "lucide-react";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+// ConversationalAgent.tsx
 import React, { useState } from "react";
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
@@ -68,6 +74,22 @@ const ConversationalAgent = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Voice input state
+  const {
+    transcript,
+    listening,
+    startListening,
+    stopListening,
+    hasRecognitionSupport
+  } = useSpeechRecognition();
+
+  // Update input with transcript when listening stops
+  useEffect(() => {
+    if (!listening && transcript) {
+      setInput(transcript);
+    }
+  }, [listening, transcript]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -87,11 +109,21 @@ const ConversationalAgent = () => {
       ];
       const larkReply = await fetchLarkReply(history);
       setMessages(prev => [...prev, { text: larkReply, sender: "lark" }]);
+      toast({
+        title: "Message sent",
+        description: "LARK has replied.",
+        variant: "success"
+      });
     } catch (err) {
       setMessages(prev => [
         ...prev,
         { text: "Sorry, there was an error communicating with LARK.", sender: "lark" }
       ]);
+      toast({
+        title: "Error",
+        description: "There was an error communicating with LARK.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -117,12 +149,13 @@ const ConversationalAgent = () => {
           </div>
         ))}
         {loading && (
-          <div className="px-4 py-2 rounded-lg bg-green-50 text-green-700 self-start max-w-[80%]">
-            LARK is typing...
+          <div className="px-4 py-2 rounded-lg bg-green-50 text-green-700 self-start max-w-[80%] flex items-center gap-2">
+            <Skeleton className="h-5 w-5 rounded-full bg-green-200 animate-pulse" />
+            <span>LARK is typing...</span>
           </div>
         )}
       </div>
-      <form onSubmit={handleSend} className="flex gap-2">
+      <form onSubmit={handleSend} className="flex gap-2 items-center">
         <input
           className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 placeholder-gray-500"
           type="text"
@@ -131,6 +164,18 @@ const ConversationalAgent = () => {
           placeholder="Type your message..."
           disabled={loading}
         />
+        {hasRecognitionSupport && (
+          <button
+            type="button"
+            className={`p-2 rounded-full border ${listening ? "bg-red-100 border-red-400" : "bg-blue-100 border-blue-400"} text-blue-700 hover:bg-blue-200 transition flex items-center`}
+            onClick={listening ? stopListening : startListening}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            disabled={loading}
+            tabIndex={0}
+          >
+            {listening ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </button>
+        )}
         <button
           type="submit"
           className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"

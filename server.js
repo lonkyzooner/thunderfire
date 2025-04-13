@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const connectDB = require('./src/database/connection');
+connectDB(); // Connect to MongoDB asynchronously
 
 // Import models
 const User = require('./src/database/models/User');
@@ -36,6 +37,8 @@ app.use(helmet({
   },
   crossOriginEmbedderPolicy: false, // Required for Stripe integration
 }));
+app.use('/api/admin', require('./server/routes/admin'));
+app.use('/api/auth', require('./server/routes/auth'));
 
 // Configure rate limiting
 const apiLimiter = rateLimit({

@@ -2,6 +2,14 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const SubscriptionSchema = new Schema({
+  // Multi-tenant: Organization/Department ID (required)
+  orgId: {
+    type: String,
+    required: true,
+    index: true,
+    trim: true,
+    description: 'Unique organization/department/tenant ID'
+  },
   // Link to user
   userId: {
     type: Schema.Types.ObjectId,
@@ -95,5 +103,8 @@ const SubscriptionSchema = new Schema({
 }, {
   timestamps: true
 });
+
+// Index for efficient multi-tenant queries
+SubscriptionSchema.index({ orgId: 1, userId: 1 });
 
 module.exports = mongoose.model('Subscription', SubscriptionSchema);

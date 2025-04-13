@@ -128,6 +128,10 @@ router.post(
     try {
       const { planId, successUrl, cancelUrl } = req.body;
       const userId = req.auth.payload.sub;
+      const orgId = req.auth.payload.orgId;
+      if (!orgId) {
+        return res.status(400).json({ error: 'Organization ID is required in JWT' });
+      }
       
       // Get customer ID
       const customerId = await getStripeCustomerId(userId);
@@ -149,6 +153,10 @@ router.post('/create-portal-session', jwtCheck, async (req, res) => {
   try {
     const { returnUrl } = req.body;
     const userId = req.auth.payload.sub;
+    const orgId = req.auth.payload.orgId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization ID is required in JWT' });
+    }
     
     // Get customer ID
     const customerId = await getStripeCustomerId(userId);
@@ -169,6 +177,10 @@ router.post('/cancel', jwtCheck, async (req, res) => {
   try {
     const { atPeriodEnd } = req.body;
     const userId = req.auth.payload.sub;
+    const orgId = req.auth.payload.orgId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization ID is required in JWT' });
+    }
     
     // Get customer ID
     const customerId = await getStripeCustomerId(userId);

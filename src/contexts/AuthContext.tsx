@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   name: string;
   picture: string;
+  orgId: string; // Multi-tenant: organization/department/tenant ID
   departmentId?: string;
   badgeNumber?: string;
   role?: string;
@@ -111,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: auth0User.email || '',
         name: auth0User.name || '',
         picture: auth0User.picture || '',
+        orgId: profileData.orgId || profileData.departmentId || '', // fallback to departmentId if orgId missing
         departmentId: profileData.departmentId,
         badgeNumber: profileData.badgeNumber,
         role: profileData.role,
@@ -138,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: auth0User.email || '',
           name: auth0User.name || '',
           picture: auth0User.picture || '',
+          orgId: '',
           subscriptionTier: 'free',
           subscriptionStatus: 'inactive',
           features: [],

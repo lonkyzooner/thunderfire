@@ -8,6 +8,7 @@ import { UserCircle, CreditCard, Settings2, Bell, Lock, LogOut, CheckCircle, Clo
 import { useStripe } from '../contexts/StripeContext';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/DevAuthContext';
+import { useUserDepartment } from '../contexts/UserDepartmentContext';
 
 const AccountPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -15,6 +16,78 @@ const AccountPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+// Editable profile state
+const [editName, setEditName] = useState(user?.name || "");
+const [editEmail, setEditEmail] = useState(user?.email || "");
+const [editDepartmentId, setEditDepartmentId] = useState(user?.departmentId || "");
+const [editBadgeNumber, setEditBadgeNumber] = useState(user?.badgeNumber || "");
+const { user: userCtx, setUser: setUserCtx } = useUserDepartment();
+const [editRank, setEditRank] = useState(userCtx?.rank || "officer");
+const [profileSaving, setProfileSaving] = useState(false);
+
+// Notification preferences state
+const [emailNotifications, setEmailNotifications] = useState(true);
+const [appNotifications, setAppNotifications] = useState(true);
+const [prefsSaving, setPrefsSaving] = useState(false);
+
+// Save profile handler
+const handleSaveProfile = async () => {
+  setProfileSaving(true);
+  try {
+    // Example: Replace with real API call
+    const res = await fetch(`/api/admin/users/${userCtx.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        name: editName,
+        rank: editRank,
+        email: editEmail,
+        departmentId: editDepartmentId,
+        badgeNumber: editBadgeNumber,
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to update profile");
+    const data = await res.json();
+    setUserCtx({
+      ...userCtx,
+      name: data.user.name,
+      rank: data.user.rank,
+      email: data.user.email,
+      departmentId: data.user.departmentId,
+      badgeNumber: data.user.badgeNumber,
+    });
+    // show success feedback (toast/snackbar)
+  } catch (e) {
+    // show error feedback
+  } finally {
+    setProfileSaving(false);
+  }
+};
+
+// Cancel profile edits
+const handleCancelProfile = () => {
+  setEditName(user?.name || "");
+  setEditEmail(user?.email || "");
+  setEditDepartmentId(user?.departmentId || "");
+  setEditBadgeNumber(user?.badgeNumber || "");
+};
+
+// Save preferences handler
+const handleSavePreferences = async () => {
+  setPrefsSaving(true);
+  try {
+    // TODO: Replace with real API call or context update
+    await new Promise(res => setTimeout(res, 800));
+    // show success feedback
+  } catch (e) {
+    // show error feedback
+  } finally {
+    setPrefsSaving(false);
+  }
+};
 
   // Fetch subscription details
   useEffect(() => {
@@ -77,6 +150,9 @@ const AccountPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-950 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
+<Link to="/dashboard">
+  <Button variant="secondary" className="mb-2 mr-4">Dashboard</Button>
+</Link>
           <h1 className="text-3xl font-bold text-white">My Account</h1>
           <p className="text-blue-200">Manage your LARK subscription and settings</p>
         </div>
@@ -309,40 +385,66 @@ const AccountPage: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-blue-300 mb-1">Name</label>
-                          <input 
-                            type="text" 
-                            value={user?.name || ""}
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
                             className="w-full bg-blue-900/50 border border-blue-800 rounded-md px-3 py-2 text-white"
-                            disabled
                           />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-blue-300 mb-1">Email</label>
-                          <input 
-                            type="email" 
-                            value={user?.email || ""}
+                          <input
+                            type="email"
+                            value={editEmail}
+                            onChange={e => setEditEmail(e.target.value)}
                             className="w-full bg-blue-900/50 border border-blue-800 rounded-md px-3 py-2 text-white"
-                            disabled
                           />
                         </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-blue-300 mb-1">Department ID</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
+                          value={editDepartmentId}
+                          onChange={e => setEditDepartmentId(e.target.value)}
                           placeholder="Enter your department ID"
                           className="w-full bg-blue-900/50 border border-blue-800 rounded-md px-3 py-2 text-white"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-blue-300 mb-1">Badge Number</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
+                          value={editBadgeNumber}
+                          onChange={e => setEditBadgeNumber(e.target.value)}
                           placeholder="Enter your badge number"
                           className="w-full bg-blue-900/50 border border-blue-800 rounded-md px-3 py-2 text-white"
                         />
                       </div>
-                      <Button>Update Profile</Button>
+                      <div>
+                        <label className="block text-sm font-medium text-blue-300 mb-1">Rank</label>
+                        <select
+                          value={editRank}
+                          onChange={e => setEditRank(e.target.value)}
+                          className="w-full bg-blue-900/50 border border-blue-800 rounded-md px-3 py-2 text-white"
+                        >
+                          <option value="officer">Officer</option>
+                          <option value="deputy">Deputy</option>
+                          <option value="sergeant">Sergeant</option>
+                          <option value="lieutenant">Lieutenant</option>
+                          <option value="captain">Captain</option>
+                          <option value="chief">Chief</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleSaveProfile} disabled={profileSaving}>
+                          {profileSaving ? "Saving..." : "Save"}
+                        </Button>
+                        <Button variant="ghost" onClick={handleCancelProfile} disabled={profileSaving}>
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   
@@ -356,9 +458,17 @@ const AccountPage: React.FC = () => {
                           <span className="text-white">Email Notifications</span>
                         </div>
                         <div className="relative inline-block w-12 h-6">
-                          <input type="checkbox" className="sr-only" id="toggle-email" />
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            id="toggle-email"
+                            checked={emailNotifications}
+                            onChange={e => setEmailNotifications(e.target.checked)}
+                          />
                           <div className="block bg-blue-800 w-12 h-6 rounded-full"></div>
-                          <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                          <div
+                            className={`dot absolute top-1 bg-white w-4 h-4 rounded-full transition ${emailNotifications ? "left-7" : "left-1"}`}
+                          ></div>
                         </div>
                       </div>
                       
@@ -368,13 +478,23 @@ const AccountPage: React.FC = () => {
                           <span className="text-white">App Notifications</span>
                         </div>
                         <div className="relative inline-block w-12 h-6">
-                          <input type="checkbox" className="sr-only" id="toggle-app" checked />
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            id="toggle-app"
+                            checked={appNotifications}
+                            onChange={e => setAppNotifications(e.target.checked)}
+                          />
                           <div className="block bg-blue-600 w-12 h-6 rounded-full"></div>
-                          <div className="dot absolute left-7 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                          <div
+                            className={`dot absolute top-1 bg-white w-4 h-4 rounded-full transition ${appNotifications ? "left-7" : "left-1"}`}
+                          ></div>
                         </div>
                       </div>
                       
-                      <Button>Save Preferences</Button>
+                      <Button onClick={handleSavePreferences} disabled={prefsSaving}>
+                        {prefsSaving ? "Saving..." : "Save Preferences"}
+                      </Button>
                     </div>
                   </div>
                   

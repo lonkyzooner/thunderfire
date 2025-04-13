@@ -23,8 +23,11 @@ import {
 } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { useVoice } from '../contexts/VoiceContext';
+import { useNavigate } from 'react-router-dom';
 
 export function Settings() {
+  const navigate = useNavigate();
+
   // Add Account button functionality
   const handleAccountClick = () => {
     // Open account settings or profile page
@@ -38,7 +41,7 @@ export function Settings() {
 
   // Test voice settings with current configuration
   const testVoiceSettings = async () => {
-    const greeting = settings.officerName 
+    const greeting = settings.officerName
       ? `Hello ${settings.officerName}, this is how I will sound with the current settings.`
       : 'This is how I will sound with the current settings.';
     await speak(greeting);
@@ -86,15 +89,20 @@ export function Settings() {
     setLocalCodename(trimmedCodename);
     
     // Notify other components about the profile update
-    document.dispatchEvent(new CustomEvent('officerProfileUpdated', { 
-      detail: { 
+    document.dispatchEvent(new CustomEvent('officerProfileUpdated', {
+      detail: {
         name: trimmedName,
         rank: trimmedRank,
         codename: trimmedCodename,
         displayName: displayName || trimmedRank // Fallback to rank if nothing else
-      } 
+      }
     }));
   };
+  
+    // Return to Dashboard button
+    const handleReturnToDashboard = () => {
+      navigate('/dashboard');
+    };
   
   // Load profile from localStorage on component mount
   useEffect(() => {
@@ -169,6 +177,17 @@ export function Settings() {
                       <SelectItem value="Detective">Detective</SelectItem>
                       <SelectItem value="Lieutenant">Lieutenant</SelectItem>
                       <SelectItem value="Captain">Captain</SelectItem>
+      {/* Return to Dashboard Button */}
+      <div className="flex justify-center mt-8">
+        <Button
+          variant="default"
+          className="px-6 py-2 rounded-lg"
+          onClick={handleReturnToDashboard}
+        >
+          Return to Dashboard
+        </Button>
+      </div>
+
                       <SelectItem value="Chief">Chief</SelectItem>
                     </SelectContent>
                   </Select>

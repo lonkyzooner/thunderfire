@@ -372,8 +372,24 @@ export function RSCodes() {
     }
   };
 
+  // Collapsible sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div className="p-4 space-y-6 bg-white/90 rounded-2xl shadow border border-gray-200 w-full">
+    <aside
+      className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'max-w-md w-full' : 'max-w-xs w-16'} bg-white/90 rounded-2xl shadow border border-gray-200`}
+      aria-label="Statutes Sidebar"
+    >
+      <button
+        className="absolute left-2 top-2 z-10 bg-blue-100 hover:bg-blue-200 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+        aria-label={sidebarOpen ? "Collapse Statutes Sidebar" : "Expand Statutes Sidebar"}
+        aria-expanded={sidebarOpen}
+        onClick={() => setSidebarOpen((open) => !open)}
+        tabIndex={0}
+      >
+        <span aria-hidden="true">{sidebarOpen ? "⏴" : "⏵"}</span>
+      </button>
+      <div className={`p-4 space-y-6 ${sidebarOpen ? '' : 'hidden'}`}>
           <div className="flex flex-col items-center justify-center mb-6 gap-2 text-center">
             <h2 className="text-2xl font-heading font-extrabold text-[hsl(var(--primary))] flex items-center justify-center gap-2">
               <BookMarked className="h-6 w-6 text-[hsl(var(--accent))]" />
@@ -668,6 +684,7 @@ export function RSCodes() {
           </Card>
         </div>
       )}
-    </div>
+        </div>
+    </aside>
   );
 } 
