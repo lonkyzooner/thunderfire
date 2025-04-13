@@ -1,22 +1,51 @@
-import React from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 
 const LoginPage: React.FC = () => {
-  const { loginWithRedirect, isAuthenticated, isLoading, error } = useAuth0();
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    orgId: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    console.log('[LoginPage] Initiating Auth0 login');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      await loginWithRedirect({
-        appState: {
-          returnTo: '/',
-          timestamp: new Date().getTime()
-        }
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
       });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+      // Store JWT in localStorage (or HttpOnly cookie in production)
+      localStorage.setItem('token', data.token);
+      // Optionally store user/org info
+      localStorage.setItem('user', JSON.stringify(data.user));
+      // Redirect to dashboard or main app
+      window.location.href = '/';
     } catch (err) {
-      console.error('[LoginPage] Auth0 login error:', err);
+      setError('Network error or server unavailable');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,39 +65,45 @@ const LoginPage: React.FC = () => {
               Sign in to access your LARK assistant
             </p>
           </div>
-          
-          {isLoading ? (
-            <div className="text-center py-4">Loading authentication...</div>
-          ) : isAuthenticated ? (
-            <div className="text-center py-4">
-              You are already authenticated. Redirecting...
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {error && (
-                <div className="p-3 bg-red-900/50 border border-red-700 rounded-md text-sm">
-                  Authentication error: {error.message}
-                </div>
-              )}
-              
-              <Button 
-                className="w-full bg-blue-700 hover:bg-blue-600" 
-                onClick={handleLogin}
-              >
-                Sign in with Auth0
-              </Button>
-              
-              <div className="text-xs text-center text-blue-300 mt-4">
-                <p>Auth0 Domain: {import.meta.env.VITE_AUTH0_DOMAIN}</p>
-                <p>Client ID: {import.meta.env.VITE_AUTH0_CLIENT_ID.substring(0, 6)}...</p>
-              </div>
-            </div>
-          )}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              name="orgId"
+              placeholder="Organization ID"
+              value={form.orgId}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 rounded text-black"
+            />
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 rounded text-black"
+            />
+            <input
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 rounded text-black"
+            />
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+            {error && <div className="text-red-400 text-center">{error}</div>}
+          </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-blue-800 pt-4">
-          <p className="text-xs text-blue-300">
-            © 2025 LARK - Secure Authentication
-          </p>
+        <CardFooter>
+          <div className="w-full text-center">
+            <a href="/SignupPage" className="text-blue-300 hover:underline">
+              Don&apos;t have an account? Sign up
+            </a>
+          </div>
         </CardFooter>
       </Card>
     </div>
