@@ -2,6 +2,8 @@
 // Basic multi-modal chat interface for LARK
 
 import React, { useState } from 'react';
+import SuggestionsBar, { Suggestion } from './SuggestionsBar';
+import IncidentTimeline, { TimelineEvent } from './IncidentTimeline';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useLiveKitVoice } from '../hooks/useLiveKitVoice';
 import { useVoiceAssistantCore } from '../hooks/useVoiceAssistantCore';
@@ -21,6 +23,11 @@ export function LarkChat() {
   const [summary, setSummary] = useState<string | null>(null);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
+  // Suggestions state and throttling
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [lastSuggestionTime, setLastSuggestionTime] = useState<number>(0);
+  const SUGGESTION_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
+
   // Placeholder: Simulate summarization with a timeout
   async function handleSummarizeConversation() {
     setSummary(null);
@@ -33,7 +40,33 @@ export function LarkChat() {
       );
     }, 1200);
   }
+
+  function maybeShowSuggestions(context: "afterSend") {
+    const now = Date.now();
+    if (now - lastSuggestionTime < SUGGESTION_COOLDOWN_MS) return;
+    // Example: Only show after user sends a message, not after every LARK reply
+    if (context === "afterSend") {
+      setSuggestions([
+        {
+          id: "summarize",
+          text: "Summarize Conversation",
+          onClick: handleSummarizeConversation,
+        },
+        {
+          id: "flag",
+          text: "Flag for Supervisor Review",
+          onClick: () => {
+            alert("Flagged for supervisor review (placeholder)");
+            setSuggestions([]);
+          },
+        },
+      ]);
+      setLastSuggestionTime(now);
+    }
+  }
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+  // For timeline: store timestamps for each message
+  const [messageTimestamps, setMessageTimestamps] = useState<number[]>([]);
   const [mapCommand, setMapCommand] = useState<CommandResponse | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
 
@@ -44,7 +77,9 @@ export function LarkChat() {
     if (!text.trim()) return;
     const userMsg = { role: 'user' as const, content: text };
     setMessages((prev) => [...prev, userMsg]);
+    setMessageTimestamps((prev) => [...prev, Date.now()]);
     setText('');
+    maybeShowSuggestions("afterSend");
     try {
       const response = await processVoiceCommand(text);
       // If the response is a map action, trigger map update
@@ -68,6 +103,7 @@ export function LarkChat() {
         // Speak the assistant's reply using LiveKit TTS
         stopSpeaking();
         speak(assistantMsg.content);
+        setMessageTimestamps((prev) => [...prev, Date.now()]);
         return [...prev, assistantMsg];
       });
     } catch (err) {
@@ -78,45 +114,55 @@ export function LarkChat() {
     }
   };
 
+  // Dismiss suggestions
+  function handleDismissSuggestions() {
+    setSuggestions([]);
+  }
+
   return (
-    <div className="lark-chat-container" style={{ maxWidth: 480, margin: '0 auto', padding: 16 }}>
-      <OfficerMap mapCommand={mapCommand} />
-      <div style={{ margin: '16px 0' }}>
+    <div className="flex flex-col h-full w-full bg-card rounded-lg shadow-lg overflow-hidden">
+      <div className="flex-none p-4">
+        <OfficerMap mapCommand={mapCommand} />
+      </div>
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            style={{
-              textAlign: msg.role === 'user' ? 'right' : 'left',
-              margin: '4px 0',
-              color: msg.role === 'user' ? '#1976d2' : '#333'
-            }}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}
           >
-            <span style={{ fontWeight: msg.role === 'user' ? 600 : 400 }}>
-              {msg.role === 'user' ? 'You: ' : 'LARK: '}
-            </span>
-            {msg.content}
+            <div className={`max-w-[80%] rounded-lg p-3 ${
+              msg.role === 'user'
+                ? 'bg-primary text-primary-foreground ml-auto'
+                : 'bg-secondary text-secondary-foreground'
+            }`}>
+              <div className="font-semibold mb-1">
+                {msg.role === 'user' ? 'You' : 'LARK'}
+              </div>
+              <div>{msg.content}</div>
+            </div>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex' }}>
-      {/* Summarize Conversation Button */}
-      <div style={{ marginBottom: 12, textAlign: 'right' }}>
-        <button
-          onClick={handleSummarizeConversation}
-          style={{
-            background: '#1976d2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            padding: '6px 16px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0 1px 4px 0 #1976d222'
-          }}
-        >
-          Summarize Conversation
-        </button>
-      </div>
+      {/* Suggestions Bar */}
+      <SuggestionsBar suggestions={suggestions} onDismiss={handleDismissSuggestions} />
+      {/* Incident Timeline */}
+      <IncidentTimeline
+        events={messages.map((msg, idx) => ({
+          id: `msg-${idx}`,
+          timestamp: messageTimestamps[idx] || Date.now(),
+          type: msg.role,
+          content: msg.content,
+        }))}
+      />
+      <div className="flex-none p-4 border-t border-border">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleSummarizeConversation}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Summarize Conversation
+          </button>
+        </div>
       {/* Summary Modal */}
       {showSummaryModal && (
         <div
@@ -178,26 +224,19 @@ export function LarkChat() {
       )}
         {/* Voice input and text input area */}
         {showTranscript && transcript && !listening ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={transcript}
               readOnly
-              style={{ flex: 1, padding: 8, borderRadius: 4, border: '1px solid #ccc', background: '#f9f9f9' }}
+              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-md"
             />
             <button
               onClick={() => {
                 setText(transcript);
                 setShowTranscript(false);
               }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 4,
-                background: '#1976d2',
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
               Use
             </button>
@@ -206,26 +245,19 @@ export function LarkChat() {
                 setShowTranscript(false);
                 stopListening();
               }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 4,
-                background: '#eee',
-                color: '#333',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
             >
               Cancel
             </button>
           </div>
         ) : (
-          <>
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="Type your message or use the mic..."
-              style={{ flex: 1, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              className="flex-1 px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               disabled={listening}
             />
             {hasRecognitionSupport && (
@@ -235,20 +267,15 @@ export function LarkChat() {
                     stopListening();
                   } else {
                     setShowTranscript(true);
-                    stopSpeaking(); // Stop TTS if user starts speaking
+                    stopSpeaking();
                     startListening();
                   }
                 }}
-                style={{
-                  marginLeft: 8,
-                  padding: '8px',
-                  borderRadius: '50%',
-                  background: listening ? '#ff9800' : '#eee',
-                  color: listening ? '#fff' : '#333',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 700
-                }}
+                className={`p-2 rounded-full ${
+                  listening
+                    ? 'bg-warning text-warning-foreground'
+                    : 'bg-secondary text-secondary-foreground'
+                } hover:opacity-90 transition-colors`}
                 aria-label={listening ? "Stop listening" : "Start voice input"}
               >
                 {listening ? '🎤...' : '🎤'}
@@ -256,30 +283,22 @@ export function LarkChat() {
             )}
             <button
               onClick={handleSend}
-              style={{
-                marginLeft: 8,
-                padding: '8px 16px',
-                borderRadius: 4,
-                background: '#1976d2',
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
               disabled={!text.trim() || listening}
             >
               Send
             </button>
-          </>
+          </div>
         )}
       </div>
       {/* UI feedback for voice input */}
       {listening && (
-        <div style={{ marginTop: 8, color: '#ff9800', fontWeight: 500 }}>
+        <div className="mt-2 text-warning font-medium">
           Listening... Speak your message.
         </div>
       )}
       {speechError && (
-        <div style={{ marginTop: 8, color: '#d32f2f', fontWeight: 500 }}>
+        <div className="mt-2 text-destructive font-medium">
           Voice input error: {speechError}
         </div>
       )}

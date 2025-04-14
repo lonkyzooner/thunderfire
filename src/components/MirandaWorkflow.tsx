@@ -93,30 +93,33 @@ const MirandaWorkflow: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <aside
-      className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'max-w-md w-full' : 'max-w-xs w-16'} bg-white/90 rounded-2xl shadow border border-gray-200`}
-      aria-label="Miranda Workflow Sidebar"
+    <div
+      className={`flex flex-col h-full bg-card rounded-lg shadow-lg overflow-hidden transition-all duration-300 ease-in-out ${
+        sidebarOpen ? 'w-full' : 'w-16'
+      }`}
+      aria-label="Miranda Workflow"
     >
-      <button
-        className="absolute left-2 top-2 z-10 bg-blue-100 hover:bg-blue-200 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        aria-label={sidebarOpen ? "Collapse Miranda Workflow Sidebar" : "Expand Miranda Workflow Sidebar"}
-        aria-expanded={sidebarOpen}
-        onClick={() => setSidebarOpen((open) => !open)}
-        tabIndex={0}
-      >
-        <span aria-hidden="true">{sidebarOpen ? "⏴" : "⏵"}</span>
-      </button>
-      <div className={`p-4 space-y-6 ${sidebarOpen ? '' : 'hidden'}`}>
+      <div className="flex-none p-4 border-b border-border flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Miranda Workflow</h2>
+        <button
+          className="p-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
+          aria-label={sidebarOpen ? "Collapse Miranda Workflow" : "Expand Miranda Workflow"}
+          aria-expanded={sidebarOpen}
+          onClick={() => setSidebarOpen((open) => !open)}
+        >
+          <span aria-hidden="true">{sidebarOpen ? "⏴" : "⏵"}</span>
+        </button>
+      </div>
+      <div className={`flex-1 p-4 space-y-4 overflow-y-auto ${sidebarOpen ? '' : 'hidden'}`}>
         {step === 1 && (
-          <form className="space-y-5" autoComplete="off">
-            <h2 className="text-lg font-semibold mb-2">Miranda Workflow</h2>
+          <form className="space-y-4" autoComplete="off">
             <div className="space-y-2">
               <label htmlFor="miranda-language" className="block text-sm font-medium">Language</label>
               <select
                 id="miranda-language"
                 value={language}
                 onChange={e => setLanguage(e.target.value)}
-                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+                className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="english">English</option>
                 <option value="spanish">Spanish</option>
@@ -135,7 +138,7 @@ const MirandaWorkflow: React.FC = () => {
                     value={customLanguage}
                     onChange={e => setCustomLanguage(e.target.value)}
                     placeholder="Enter language (e.g., Russian, Hindi)"
-                    className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all mt-2"
+                    className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </>
               )}
@@ -147,7 +150,7 @@ const MirandaWorkflow: React.FC = () => {
                 value={suspectName}
                 onChange={e => setSuspectName(e.target.value)}
                 placeholder="Suspect Name"
-                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+                className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -157,7 +160,7 @@ const MirandaWorkflow: React.FC = () => {
                 value={dob}
                 onChange={e => setDob(e.target.value)}
                 placeholder="Date of Birth"
-                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+                className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -167,55 +170,69 @@ const MirandaWorkflow: React.FC = () => {
                 value={caseNumber}
                 onChange={e => setCaseNumber(e.target.value)}
                 placeholder="Case Number"
-                className="w-full rounded-md border border-border bg-white/70 text-foreground px-3 py-2 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
+                className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             {error && <div className="text-red-600 text-sm">{error}</div>}
             <button
               type="button"
               onClick={handleTranslateAndSpeak}
-              className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
               disabled={isSpeaking}
             >
-              {isSpeaking ? <span className="animate-pulse">Speaking...</span> : <span>Start Miranda Rights</span>}
+              {isSpeaking ? (
+                <span className="animate-pulse">Speaking...</span>
+              ) : (
+                <span>Start Miranda Rights</span>
+              )}
             </button>
           </form>
         )}
         {step === 2 && (
-          <div className="space-y-5">
-            <h2 className="text-lg font-semibold mb-2">Miranda Rights (Review)</h2>
-            <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-2 text-base font-medium text-foreground">
-              <p>{translation}</p>
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Miranda Rights (Review)</h2>
+            <div className="p-4 bg-muted rounded-md">
+              <p className="text-muted-foreground">{translation}</p>
             </div>
             <button
               onClick={handleLog}
-              className="w-full py-3 rounded-md font-heading font-bold text-base bg-green-600 hover:bg-green-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors"
             >
               Complete and Log
             </button>
           </div>
         )}
         {step === 3 && (
-          <div className="space-y-5">
-            <h2 className="text-lg font-semibold mb-2">Miranda Rights Logged</h2>
-            <div className="bg-white/60 rounded-md p-4 shadow-inner border border-border/40 space-y-1 text-base font-medium text-foreground">
-              <p>Suspect: {suspectName}</p>
-              <p>DOB: {dob}</p>
-              <p>Case #: {caseNumber}</p>
-              <p>Timestamp: {new Date().toLocaleString()}</p>
-              <p>Language: {language === 'other' ? customLanguage.trim() : language}</p>
-              <p>Translation: {translation}</p>
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Miranda Rights Logged</h2>
+            <div className="p-4 bg-muted rounded-md space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <p className="text-sm text-muted-foreground">Suspect:</p>
+                <p className="text-sm font-medium">{suspectName}</p>
+                <p className="text-sm text-muted-foreground">DOB:</p>
+                <p className="text-sm font-medium">{dob}</p>
+                <p className="text-sm text-muted-foreground">Case #:</p>
+                <p className="text-sm font-medium">{caseNumber}</p>
+                <p className="text-sm text-muted-foreground">Timestamp:</p>
+                <p className="text-sm font-medium">{new Date().toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Language:</p>
+                <p className="text-sm font-medium">{language === 'other' ? customLanguage.trim() : language}</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground mb-2">Translation:</p>
+                <p className="text-sm">{translation}</p>
+              </div>
             </div>
             <button
               onClick={() => setStep(1)}
-              className="w-full py-3 rounded-md font-heading font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
               New Miranda Event
             </button>
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };
 

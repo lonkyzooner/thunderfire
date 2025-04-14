@@ -82,6 +82,8 @@ export class VoiceRecognitionService {
   private audioContext: AudioContext | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
+private audioCache: Map<string, Blob> = new Map();
+private cacheSizeLimit: number = 10; // Limit to 10 cached audio blobs to manage memory
   private isListening: boolean = false;
   private manualStop: boolean = false;
   private wakeWordDetected: boolean = false;
@@ -449,6 +451,34 @@ export class VoiceRecognitionService {
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
           const arrayBuffer = await audioBlob.arrayBuffer();
           const audioData = await this.audioContext!.decodeAudioData(arrayBuffer);
+// Check if audio data is in cache before processing
+let cacheKey = this.generateCacheKey(float32Array);
+if (this.audioCache.has(cacheKey)) {
+  const cachedBlob = this.audioCache.get(cacheKey);
+  if (cachedBlob) {
+    this.debug('Using cached audio data for processing');
+    const cachedArrayBuffer = await cachedBlob.arrayBuffer();
+    const cachedAudioData = await this.audioContext!.decodeAudioData(cachedArrayBuffer);
+    const cachedFloat32Array = cachedAudioData.getChannelData(0);
+    try {
+      const result = await whisperService.transcribeAudio(cachedFloat32Array);
+      this.handleWhisperResult(result);
+      return;
+    } catch (error) {
+      console.error('Error processing cached audio with Whisper:', error);
+      this.handleError(error instanceof Error ? error : new Error(String(error)));
+      return;
+    }
+  }
+}
+// If not in cache, proceed with processing and cache the result
+this.audioCache.set(cacheKey, audioBlob);
+if (this.audioCache.size > this.cacheSizeLimit) {
+  const firstKey = this.audioCache.keys().next().value;
+  this.audioCache.delete(firstKey);
+  this.debug('Removed oldest audio data from cache to maintain size limit');
+}
+this.debug('Added new audio data to cache');
           const float32Array = audioData.getChannelData(0);
 
           try {
@@ -992,6 +1022,21 @@ export class VoiceRecognitionService {
     }
     
     return { browser, instructions };
+  }
+
+  /**
+   * Generate a cache key for audio data based on its content hash
+   * @param data The audio data to generate a key for
+   * @returns A unique string key for caching
+   */
+  private generateCacheKey(data: Float32Array): string {
+    // Simple hash function for Float32Array
+    let hash = 0;
+    for (let i = 0; i < data.length; i += 100) { // Sample every 100th value to reduce computation
+      hash = (hash << 5) - hash + data[i];
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return `audio_${hash}`;
   }
 
   /**

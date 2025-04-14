@@ -60,25 +60,25 @@ function App() {
   // Layout for widgets (x, y, w, h are grid units)
   const layouts = {
     lg: [
-      { i: "map", x: 0, y: 0, w: 4, h: 8, minW: 3, minH: 6 },
-      { i: "chat", x: 4, y: 0, w: 8, h: 16, minW: 6, minH: 8 },
-      { i: "report", x: 0, y: 8, w: 4, h: 8, minW: 2, minH: 6 },
-      { i: "miranda", x: 0, y: 16, w: 4, h: 8, minW: 2, minH: 6 },
-      { i: "statutes", x: 0, y: 24, w: 4, h: 8, minW: 2, minH: 6 },
+      { i: "map", x: 0, y: 0, w: 4, h: 10, minW: 3, minH: 8 },
+      { i: "chat", x: 4, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
+      { i: "report", x: 8, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
+      { i: "miranda", x: 0, y: 12, w: 6, h: 10, minW: 3, minH: 8 },
+      { i: "statutes", x: 6, y: 12, w: 6, h: 10, minW: 3, minH: 8 },
     ],
     md: [
-      { i: "map", x: 0, y: 0, w: 4, h: 8 },
-      { i: "chat", x: 4, y: 0, w: 8, h: 16 },
-      { i: "report", x: 0, y: 8, w: 4, h: 8 },
-      { i: "miranda", x: 0, y: 16, w: 4, h: 8 },
-      { i: "statutes", x: 0, y: 24, w: 4, h: 8 },
+      { i: "map", x: 0, y: 0, w: 6, h: 10 },
+      { i: "chat", x: 6, y: 0, w: 6, h: 12 },
+      { i: "report", x: 0, y: 10, w: 6, h: 12 },
+      { i: "miranda", x: 6, y: 12, w: 6, h: 10 },
+      { i: "statutes", x: 0, y: 22, w: 6, h: 10 },
     ],
     sm: [
-      { i: "map", x: 0, y: 0, w: 12, h: 8 },
-      { i: "chat", x: 0, y: 8, w: 12, h: 8 },
-      { i: "report", x: 0, y: 16, w: 12, h: 8 },
-      { i: "miranda", x: 0, y: 24, w: 12, h: 8 },
-      { i: "statutes", x: 0, y: 32, w: 12, h: 8 },
+      { i: "map", x: 0, y: 0, w: 12, h: 10 },
+      { i: "chat", x: 0, y: 10, w: 12, h: 12 },
+      { i: "report", x: 0, y: 22, w: 12, h: 12 },
+      { i: "miranda", x: 0, y: 34, w: 12, h: 10 },
+      { i: "statutes", x: 0, y: 44, w: 12, h: 10 },
     ]
   };
 
@@ -216,32 +216,38 @@ function App() {
             margin={[20, 20]}
             containerPadding={[0, 0]}
           >
-            <div key="map" className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-              <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Officer Location</div>
-              <OfficerMap onLocationChange={setLocation} />
+            <div key="map" className="widget">
+              <div className="widget-header">Officer Location</div>
+              <div className="widget-content">
+                <OfficerMap onLocationChange={setLocation} />
+              </div>
             </div>
-            <div key="chat-report-group" className="flex flex-col lg:flex-row gap-6 w-full">
-              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
-                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">LARK Chat</div>
+            <div key="chat" className="widget">
+              <div className="widget-header">LARK Chat</div>
+              <div className="widget-content">
                 <ConversationalAgent />
               </div>
-              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
-                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Report Writing</div>
-                <Suspense fallback={<div className="p-8 text-center">Loading report assistant...</div>}>
+            </div>
+            <div key="report" className="widget">
+              <div className="widget-header">Report Writing</div>
+              <div className="widget-content">
+                <Suspense fallback={<div className="flex items-center justify-center h-full">Loading report assistant...</div>}>
                   <ReportAssistant />
                 </Suspense>
               </div>
             </div>
-            <div key="miranda-statutes-group" className="flex flex-col lg:flex-row gap-6 w-full">
-              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
-                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Miranda Workflow</div>
-                <Suspense fallback={<div className="p-8 text-center">Loading Miranda workflow...</div>}>
+            <div key="miranda" className="widget">
+              <div className="widget-header">Miranda Workflow</div>
+              <div className="widget-content">
+                <Suspense fallback={<div className="flex items-center justify-center h-full">Loading Miranda workflow...</div>}>
                   <MirandaWorkflow />
                 </Suspense>
               </div>
-              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
-                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Statutes</div>
-                <Suspense fallback={<div className="p-8 text-center">Loading statutes...</div>}>
+            </div>
+            <div key="statutes" className="widget">
+              <div className="widget-header">Statutes</div>
+              <div className="widget-content">
+                <Suspense fallback={<div className="flex items-center justify-center h-full">Loading statutes...</div>}>
                   <RSCodes />
                 </Suspense>
               </div>

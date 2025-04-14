@@ -177,6 +177,19 @@
   }
 }
 
+/* Widget styles */
+.widget {
+  @apply bg-card rounded-lg shadow-lg border border-border overflow-hidden flex flex-col h-full;
+}
+
+.widget-header {
+  @apply cursor-move px-4 py-2 font-bold text-lg border-b border-border bg-gradient-to-r from-secondary/60 to-secondary/40 text-foreground;
+}
+
+.widget-content {
+  @apply flex-1 overflow-hidden flex flex-col;
+}
+
 @layer components {
   .lark-button {
     @apply h-12 px-4 py-2 bg-secondary border border-border/50 rounded-md
@@ -210,6 +223,27 @@
     @apply bg-card border border-border/50 rounded-md p-4
     shadow-sm;
   }
+}
+
+/* Grid layout styles */
+.react-grid-layout {
+  @apply relative;
+}
+
+.react-grid-item {
+  @apply transition-[background] duration-150 rounded-lg;
+}
+
+.react-grid-item.react-grid-placeholder {
+  @apply bg-primary/20 rounded-lg border-2 border-primary/40;
+}
+
+.react-resizable-handle {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  @apply opacity-100;
 }
 
 .record-button {
