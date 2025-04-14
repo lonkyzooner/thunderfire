@@ -116,7 +116,7 @@ export async function queryOpenAI(prompt: string, emotion: string = 'neutral'): 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'openai/gpt-4.1-nano',
+          model: 'google/gemini-2.5-pro-exp-03-25:free',
           messages: [
             {
               role: 'system',

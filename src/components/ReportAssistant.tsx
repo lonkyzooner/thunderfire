@@ -59,7 +59,7 @@ const ReportAssistant = (): JSX.Element => {
                     'X-Title': 'LARK Report Assistant'
                   },
                   body: JSON.stringify({
-                    model: 'openai/gpt-4.1-nano',
+                    model: 'google/gemini-2.5-pro-exp-03-25:free',
                     messages: [
                       {
                         role: 'user',
@@ -105,7 +105,7 @@ ${reportText}`;
                     'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    model: 'openai/gpt-4.1-nano',
+                    model: 'google/gemini-2.5-pro-exp-03-25:free',
                     messages: [
                       {
                         role: 'system',

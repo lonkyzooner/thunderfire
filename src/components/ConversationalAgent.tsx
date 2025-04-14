@@ -56,7 +56,7 @@ async function fetchLarkReply(history: { role: string; content: string }[]) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "openai/gpt-4.1-nano",
+      model: "google/gemini-2.5-pro-exp-03-25:free",
       messages
     })
   });

@@ -48,7 +48,7 @@ const MirandaWorkflow: React.FC = () => {
             'X-Title': 'LARK App'
           },
           body: JSON.stringify({
-            model: 'openai/gpt-4',
+            model: 'google/gemini-2.5-pro-exp-03-25:free',
             messages: [
               { role: 'system', content: 'You are a professional legal translator.' },
               { role: 'user', content: prompt }
