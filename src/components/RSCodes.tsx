@@ -252,7 +252,7 @@ export function RSCodes() {
       `;
       
       // Direct call to OpenRouter API for legal/statute analysis
-      const openrouterApiKey = "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";
+      const openrouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY || "";
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {

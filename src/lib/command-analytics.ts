@@ -5,7 +5,20 @@ export interface CommandMetrics {
   responseTime: number;
   confidence: number;
   offline: boolean;
-  commandType: 'miranda' | 'statute' | 'threat' | 'tactical' | 'unknown' | 'general_query';
+  commandType:
+    | 'miranda'
+    | 'statute'
+    | 'threat'
+    | 'tactical'
+    | 'unknown'
+    | 'general_query'
+    | 'show_location'
+    | 'plot_perimeter'
+    | 'highlight_route'
+    | 'center_map'
+    | 'mark_point'
+    | 'show_nearest_resource'
+    | 'draw_zone';
   voiceAccuracy?: number;
   suggestionAccepted?: boolean;
 }
@@ -17,14 +30,7 @@ export interface CommandStats {
   commonFailures: Array<{command: string; count: number}>;
   offlineUsage: number;
   voiceRecognitionAccuracy: number;
-  commandTypeBreakdown: {
-    miranda: number;
-    statute: number;
-    threat: number;
-    tactical: number;
-    general_query: number;
-    unknown: number;
-  };
+  commandTypeBreakdown: Record<string, number>;
   predictiveMetrics: {
     suggestionAcceptanceRate: number;
     averageConfidenceScore: number;
@@ -112,7 +118,7 @@ class CommandAnalytics {
     const typeBreakdown = recentMetrics.reduce((acc, m) => {
       acc[m.commandType] = (acc[m.commandType] || 0) + 1;
       return acc;
-    }, {} as CommandStats['commandTypeBreakdown']);
+    }, {} as Record<string, number>);
 
     // Calculate voice recognition accuracy
     const voiceMetrics = recentMetrics.filter(m => m.voiceAccuracy !== undefined);

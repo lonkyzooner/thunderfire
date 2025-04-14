@@ -58,12 +58,29 @@ export interface CommandParameters {
   statute?: string;
   threat?: string;
   query?: string;
-  location?: string; // Added location parameter
+  location?: string; // e.g., address or place name
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  // Add more geospatial parameters as needed
 }
 
 export interface CommandResponse {
   command: string;
-  action: 'miranda' | 'statute' | 'threat' | 'tactical' | 'unknown' | 'general_query';
+  action:
+    | 'miranda'
+    | 'statute'
+    | 'threat'
+    | 'tactical'
+    | 'unknown'
+    | 'general_query'
+    | 'show_location'
+    | 'plot_perimeter'
+    | 'highlight_route'
+    | 'center_map'
+    | 'mark_point'
+    | 'show_nearest_resource'
+    | 'draw_zone';
   parameters?: CommandParameters;
   executed: boolean;
   result?: string;

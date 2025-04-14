@@ -35,7 +35,9 @@ const MirandaWorkflow: React.FC = () => {
       let translatedText = MIRANDA_ENGLISH;
       if (langToUse.toLowerCase() !== 'english') {
         // Direct call to OpenRouter API from frontend
-        const openrouterApiKey = "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";
+        const openrouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY || "";
+        // DEBUG: Log OpenRouter API key at runtime (remove after testing)
+        console.log('[DEBUG] VITE_OPENROUTER_API_KEY:', openrouterApiKey);
         const prompt = `Translate the following text to ${langToUse}:\n\n${MIRANDA_ENGLISH}`;
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',

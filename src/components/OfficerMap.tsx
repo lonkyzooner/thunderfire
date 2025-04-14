@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Mapbox public access token provided by user
-mapboxgl.accessToken = "pk.eyJ1IjoiYnRzY290dDUyMSIsImEiOiJjbTllam5xaTIwcGxkMmlvYmNvdzk1dXh3In0.LmjL2tkLoAA_ckwmb36EZg";
+// Mapbox public access token from environment variable (managed by Doppler)
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || "";
 
 type Location = {
   latitude: number;
@@ -17,14 +17,35 @@ const DEFAULT_LOCATION: Location = {
   longitude: -91.1871,
 };
 
+import { CommandResponse } from "../lib/openai-service";
+
 interface OfficerMapProps {
   onLocationChange?: (cityState: string) => void;
+  mapCommand?: CommandResponse | null;
 }
 
-const OfficerMap: React.FC<OfficerMapProps> = ({ onLocationChange }) => {
+const OfficerMap: React.FC<OfficerMapProps> = ({ onLocationChange, mapCommand }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [location, setLocation] = useState<Location>(DEFAULT_LOCATION);
+
+  // Handle map commands from LLM/voice
+  useEffect(() => {
+    if (mapCommand && mapCommand.action) {
+      // Example: handle "show_location" action
+      if (mapCommand.action === "show_location" && mapCommand.parameters?.latitude && mapCommand.parameters?.longitude) {
+        setLocation((prev) => ({
+          ...prev,
+          latitude: Number(mapCommand.parameters.latitude),
+          longitude: Number(mapCommand.parameters.longitude),
+        }));
+      }
+      // Add more actions as needed (e.g., plot_perimeter, highlight_route, etc.)
+      // For now, just log the command
+      // eslint-disable-next-line no-console
+      console.log("Received map command:", mapCommand);
+    }
+  }, [mapCommand]);
 
   // Watch position for real-time updates
   useEffect(() => {
