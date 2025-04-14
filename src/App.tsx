@@ -220,27 +220,31 @@ function App() {
               <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Officer Location</div>
               <OfficerMap onLocationChange={setLocation} />
             </div>
-            <div key="chat" className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-              <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">LARK Chat</div>
-              <ConversationalAgent />
+            <div key="chat-report-group" className="flex flex-col lg:flex-row gap-6 w-full">
+              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
+                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">LARK Chat</div>
+                <ConversationalAgent />
+              </div>
+              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
+                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Report Writing</div>
+                <Suspense fallback={<div className="p-8 text-center">Loading report assistant...</div>}>
+                  <ReportAssistant />
+                </Suspense>
+              </div>
             </div>
-            <div key="report" className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-              <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Report Writing</div>
-              <Suspense fallback={<div className="p-8 text-center">Loading report assistant...</div>}>
-                <ReportAssistant />
-              </Suspense>
-            </div>
-            <div key="miranda" className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-              <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Miranda Workflow</div>
-              <Suspense fallback={<div className="p-8 text-center">Loading Miranda workflow...</div>}>
-                <MirandaWorkflow />
-              </Suspense>
-            </div>
-            <div key="statutes" className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-              <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Statutes</div>
-              <Suspense fallback={<div className="p-8 text-center">Loading statutes...</div>}>
-                <RSCodes />
-              </Suspense>
+            <div key="miranda-statutes-group" className="flex flex-col lg:flex-row gap-6 w-full">
+              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
+                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Miranda Workflow</div>
+                <Suspense fallback={<div className="p-8 text-center">Loading Miranda workflow...</div>}>
+                  <MirandaWorkflow />
+                </Suspense>
+              </div>
+              <div className="bg-white/90 rounded-2xl shadow-lg border border-gray-200 flex flex-col flex-1 overflow-hidden min-w-[320px]">
+                <div className="widget-header cursor-move px-4 py-2 font-bold text-lg border-b border-gray-100 bg-gradient-to-r from-blue-100/60 to-blue-50/40">Statutes</div>
+                <Suspense fallback={<div className="p-8 text-center">Loading statutes...</div>}>
+                  <RSCodes />
+                </Suspense>
+              </div>
             </div>
           </ResponsiveGridLayout>
         </main>

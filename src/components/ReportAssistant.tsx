@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLiveKitVoice } from '../hooks/useLiveKitVoice';
 
 const ReportAssistant: React.FC = () => {
   const [reportText, setReportText] = useState('');
@@ -10,6 +11,8 @@ const ReportAssistant: React.FC = () => {
   });
   const [title, setTitle] = useState('');
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const { speak, stopSpeaking } = useLiveKitVoice();
 
   useEffect(() => {
     localStorage.setItem('lark_saved_reports', JSON.stringify(savedReports));
@@ -123,6 +126,8 @@ ${reportText}`;
                 setFeedback(`Error: ${data.error.message || 'Unknown error'}`);
               } else if (feedback) {
                 setFeedback(feedback);
+                stopSpeaking();
+                speak(feedback);
               } else {
                 setFeedback('No feedback generated.');
               }
