@@ -56,7 +56,7 @@ async function fetchLarkReply(history: { role: string; content: string }[]) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "openrouter/optimus-alpha",
+      model: "openai/gpt-4.1-nano",
       messages
     })
   });

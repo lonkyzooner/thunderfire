@@ -61,7 +61,7 @@ const ReportAssistant: React.FC = () => {
                   'X-Title': 'LARK Report Assistant'
                 },
                 body: JSON.stringify({
-                  model: 'openrouter/optimus-alpha',
+                  model: 'openai/gpt-4.1-nano',
                   messages: [
                     {
                       role: 'user',
@@ -107,7 +107,7 @@ ${reportText}`;
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  model: 'openrouter/optimus-alpha',
+                  model: 'openai/gpt-4.1-nano',
                   messages: [
                     {
                       role: 'system',
