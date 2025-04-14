@@ -1,3 +1,5 @@
+// DEBUG: Log OpenRouter API key at runtime (remove after testing)
+console.log('[DEBUG] VITE_OPENROUTER_API_KEY:', import.meta.env.VITE_OPENROUTER_API_KEY);
 import React, { useState, useRef, useEffect } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { getLegalInformation } from '../lib/openai-service';

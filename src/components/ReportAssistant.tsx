@@ -49,14 +49,16 @@ const ReportAssistant: React.FC = () => {
             setLoading(true);
             setFeedback(null);
             try {
-              const response = await fetch('https://api.openai.com/v1/chat/completions', {
+              const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+                  'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+                  'HTTP-Referer': window.location.origin,
+                  'X-Title': 'LARK Report Assistant'
                 },
                 body: JSON.stringify({
-                  model: 'quasar-alpha',
+                  model: 'openrouter/optimus-alpha',
                   messages: [
                     {
                       role: 'user',
@@ -102,7 +104,7 @@ ${reportText}`;
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  model: 'openrouter/quasar-alpha',
+                  model: 'openrouter/optimus-alpha',
                   messages: [
                     {
                       role: 'system',
