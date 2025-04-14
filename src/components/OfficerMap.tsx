@@ -4,7 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // Mapbox public access token from environment variable (managed by Doppler)
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || "";
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || ""; // Replace with a valid Mapbox access token if VITE_MAPBOX_TOKEN is not set. See https://docs.mapbox.com/api/overview/#access-tokens-and-token-scopes
 
 type Location = {
   latitude: number;
@@ -33,7 +33,7 @@ const OfficerMap: React.FC<OfficerMapProps> = ({ onLocationChange, mapCommand })
   useEffect(() => {
     if (mapCommand && mapCommand.action) {
       // Example: handle "show_location" action
-      if (mapCommand.action === "show_location" && mapCommand.parameters?.latitude && mapCommand.parameters?.longitude) {
+      if (mapCommand.action === "show_location" && mapCommand.parameters && mapCommand.parameters.latitude && mapCommand.parameters.longitude) {
         setLocation((prev) => ({
           ...prev,
           latitude: Number(mapCommand.parameters.latitude),

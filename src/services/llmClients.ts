@@ -215,7 +215,7 @@ export class QuasarClient implements LLMClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'openrouter/optimus-alpha',
+          model: 'openai/gpt-4.1-nano',
           messages: [
             { role: 'system', content: systemPrompt },
             ...history,
