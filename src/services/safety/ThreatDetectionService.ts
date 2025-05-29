@@ -6,6 +6,8 @@
  */
 
 import { batteryOptimizationService } from '../system/BatteryOptimizationService';
+import { supabase } from '../supabaseClient';
+import { getCurrentLocation } from '../../utils/locationTracker';
 
 export interface ThreatDetectionResult {
   threatDetected: boolean;
@@ -33,6 +35,7 @@ class ThreatDetectionService {
   private monitoringInterval: NodeJS.Timeout | null = null;
   private detectionHistory: ThreatDetectionResult[] = [];
   private listeners: Array<(result: ThreatDetectionResult) => void> = [];
+  private officerId: string | null = null;
   
   private options: ThreatDetectionOptions = {
     sensitivity: 'medium',
@@ -277,6 +280,95 @@ class ThreatDetectionService {
   }
 
   /**
+   * Set the officer ID for threat detection
+   */
+  public setOfficerId(officerId: string): void {
+    this.officerId = officerId;
+  }
+
+  /**
+   * Publish threat alert to Supabase realtime channel
+   */
+  private async publishThreatAlert(
+    threatType: string,
+    confidenceScore: number,
+    locationData?: any,
+    audioSignature?: string,
+    incidentId?: string
+  ): Promise<boolean> {
+    if (!this.officerId) {
+      console.warn('[ThreatDetection] Officer ID not set, cannot publish threat alert');
+      return false;
+    }
+
+    try {
+      const severity = this.calculateSeverity(threatType, confidenceScore);
+      
+      const threatEvent = {
+        officer_id: this.officerId,
+        threat_type: threatType,
+        confidence_score: confidenceScore,
+        location_lat: locationData?.latitude,
+        location_lng: locationData?.longitude,
+        audio_snippet_url: null, // Could be implemented later for storing audio clips
+        context: `Automated threat detection: ${threatType} detected with ${Math.round(confidenceScore * 100)}% confidence`,
+        severity,
+        acknowledged: false,
+        incident_id: incidentId,
+        metadata: {
+          audio_signature: audioSignature,
+          detection_timestamp: Date.now(),
+          sensor_type: 'audio_analysis'
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('threat_events')
+        .insert([threatEvent])
+        .select();
+
+      if (error) {
+        console.error('[ThreatDetection] Error publishing threat alert:', error.message);
+        return false;
+      }
+
+      console.log('[ThreatDetection] Threat alert published successfully:', data);
+      return true;
+    } catch (error) {
+      console.error('[ThreatDetection] Error publishing threat alert:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Calculate threat severity based on type and confidence
+   */
+  private calculateSeverity(threatType: string, confidenceScore: number): string {
+    // High priority threats
+    if (threatType === 'gunshot' && confidenceScore >= 0.8) {
+      return 'critical';
+    }
+    if (threatType === 'gunshot' && confidenceScore >= 0.6) {
+      return 'high';
+    }
+    
+    // Medium priority threats
+    if (threatType === 'scream' && confidenceScore >= 0.8) {
+      return 'high';
+    }
+    if (threatType === 'breaking_glass' && confidenceScore >= 0.7) {
+      return 'medium';
+    }
+    
+    // Lower confidence or less severe threats
+    if (confidenceScore >= 0.7) {
+      return 'medium';
+    }
+    
+    return 'low';
+  }
+
+  /**
    * Create a threat detection result and notify listeners
    */
   private async createThreatDetection(
@@ -298,11 +390,39 @@ class ThreatDetectionService {
     };
     
     // Include audio signature if enabled
+    let audioSignature: string | undefined;
     if (this.options.includeAudioSignature) {
-      result.audioSignature = this.createAudioSignature(dataArray);
+      audioSignature = this.createAudioSignature(dataArray);
+      result.audioSignature = audioSignature;
     }
     
     // Include location if enabled
+    let locationData: any = null;
+    if (this.options.includeLocation) {
+      try {
+        locationData = await getCurrentLocation();
+        if (locationData) {
+          result.location = {
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            accuracy: locationData.accuracy,
+            altitude: locationData.altitude,
+            heading: locationData.heading,
+            speed: locationData.speed
+          } as GeolocationCoordinates;
+        }
+      } catch (error) {
+        console.warn('[ThreatDetection] Could not get location:', error);
+      }
+    }
+    
+    // Publish to Supabase threat_events channel
+    await this.publishThreatAlert(
+      threatType,
+      confidenceScore,
+      locationData,
+      audioSignature
+    );
     
     // Add to history
     this.detectionHistory.push(result);

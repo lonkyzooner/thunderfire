@@ -25,7 +25,10 @@ function isConnectionStateValue(state: string): state is 'connected' | 'connecti
 const PREFERRED_BROWSER_VOICE_NAME = 'Google UK English Female'; // Adjust as needed
 
 // Constants for LiveKit configuration
-const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'wss://lark-za4hpayr.livekit.cloud';
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
+if (!LIVEKIT_URL) {
+  throw new Error('[LiveKitVoiceService] Missing required environment variable: VITE_LIVEKIT_URL');
+}
 
 // API URL for the backend server
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -890,6 +893,12 @@ class LiveKitVoiceService {
       console.warn('[LiveKitVoice] Attempted to speak empty text');
       return;
     }
+    // --- Immediate Feedback Placeholder ---
+    // Play a short sound to indicate processing has started
+    // this.playFeedbackSound('processing'); // TODO: Implement playFeedbackSound
+    // --- End Immediate Feedback ---
+
+
     
     // First, detect the language if auto-translate is enabled
     if (this.autoTranslateEnabled && !targetLanguage) {

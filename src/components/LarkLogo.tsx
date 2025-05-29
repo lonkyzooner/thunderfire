@@ -16,13 +16,13 @@ const LarkLogo: React.FC<LarkLogoProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`lark-logo ${className}`}>
+    <div>
       <img
         src="/lark-logo.svg"
         alt="LARK Logo"
         width={width}
         height={height}
-        style={{ objectFit: 'contain', display: 'block' }}
+
       />
       {/*
       <svg

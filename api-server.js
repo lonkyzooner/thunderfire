@@ -1,6 +1,18 @@
 require('dotenv').config();
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe');
+let stripe;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+} else {
+  console.warn('STRIPE_SECRET_KEY not set, using dummy Stripe client');
+  stripe = {
+    checkout: { sessions: { create: async () => ({ id: 'dummy', url: '/' }) } },
+    webhooks: { constructEvent: () => ({}) },
+    subscriptions: { list: async () => ({ data: [] }) },
+    products: { retrieve: async () => ({ name: 'Dummy Product', metadata: {} }) }
+  };
+}
 const cors = require('cors');
 const bodyParser = require('body-parser');
 

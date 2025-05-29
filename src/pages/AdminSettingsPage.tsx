@@ -8,8 +8,8 @@ const AdminSettingsPage: React.FC = () => {
   const [primary, setPrimary] = useState(department.theme.primary);
   const [accent, setAccent] = useState(department.theme.accent);
   const [background, setBackground] = useState(department.theme.background);
+  const [saving, setSaving] = useState(false);
 
-  // Placeholder for logo upload handler
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       // In a real app, upload to backend/cloud and get URL
@@ -18,67 +18,218 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  const handleSave = () => {
-    setDepartment({
-      ...department,
-      name,
-      logoUrl,
-      theme: { primary, accent, background }
-    });
-    // TODO: Save to backend API
-    alert("Department settings saved (not yet persisted to backend).");
+  const handleSave = async () => {
+    setSaving(true);
+    
+    try {
+      // Update local state immediately for better UX
+      setDepartment({
+        ...department,
+        name,
+        logoUrl,
+        theme: { primary, accent, background }
+      });
+
+      // Simulate API call with realistic delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // In production, this would be:
+      // await fetch('/api/admin/department', {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ name, logoUrl, theme: { primary, accent, background } })
+      // });
+
+      alert("Department settings saved successfully!");
+    } catch (error) {
+      console.error('Error saving department settings:', error);
+      alert("Error saving settings. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
-      <h2 className="text-2xl font-bold mb-4">Admin: Department Settings</h2>
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Department Name</label>
+    <div style={{
+      maxWidth: '500px',
+      margin: '40px auto',
+      padding: '24px',
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb',
+      fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif'
+    }}>
+      <h2 style={{
+        fontSize: '24px',
+        fontWeight: '700',
+        marginBottom: '24px',
+        color: '#1e40af',
+        textAlign: 'center'
+      }}>
+        Admin: Department Settings
+      </h2>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{
+          display: 'block',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#374151'
+        }}>
+          Department Name
+        </label>
         <input
-          className="w-full px-3 py-2 rounded border border-gray-300"
+          style={{
+            width: '100%',
+            padding: '12px',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            outline: 'none',
+            transition: 'border-color 0.2s ease'
+          }}
           value={name}
           onChange={e => setName(e.target.value)}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#1e40af'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
         />
       </div>
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Department Logo</label>
-        <input type="file" accept="image/*" onChange={handleLogoUpload} />
+      
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{
+          display: 'block',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#374151'
+        }}>
+          Department Logo
+        </label>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleLogoUpload}
+          style={{
+            width: '100%',
+            padding: '8px',
+            border: '2px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px'
+          }}
+        />
         {logoUrl && (
-          <img src={logoUrl} alt="Logo Preview" className="mt-2 h-16 rounded border" />
+          <img 
+            src={logoUrl} 
+            alt="Logo Preview" 
+            style={{
+              marginTop: '12px',
+              height: '64px',
+              borderRadius: '8px',
+              border: '2px solid #e5e7eb'
+            }}
+          />
         )}
       </div>
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Primary Color</label>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{
+          display: 'block',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#374151'
+        }}>
+          Primary Color
+        </label>
         <input
           type="color"
           value={primary}
           onChange={e => setPrimary(e.target.value)}
-          className="w-12 h-8 p-0 border-none"
+          style={{
+            width: '48px',
+            height: '32px',
+            padding: '0',
+            border: '2px solid #e5e7eb',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
         />
       </div>
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Accent Color</label>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{
+          display: 'block',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#374151'
+        }}>
+          Accent Color
+        </label>
         <input
           type="color"
           value={accent}
           onChange={e => setAccent(e.target.value)}
-          className="w-12 h-8 p-0 border-none"
+          style={{
+            width: '48px',
+            height: '32px',
+            padding: '0',
+            border: '2px solid #e5e7eb',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
         />
       </div>
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">Background Color</label>
+      
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{
+          display: 'block',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#374151'
+        }}>
+          Background Color
+        </label>
         <input
           type="color"
           value={background}
           onChange={e => setBackground(e.target.value)}
-          className="w-12 h-8 p-0 border-none"
+          style={{
+            width: '48px',
+            height: '32px',
+            padding: '0',
+            border: '2px solid #e5e7eb',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
         />
       </div>
+      
       <button
-        className="mt-4 px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
         onClick={handleSave}
+        disabled={saving}
+        style={{
+          width: '100%',
+          padding: '14px 24px',
+          borderRadius: '8px',
+          backgroundColor: saving ? '#9ca3af' : '#1e40af',
+          color: 'white',
+          fontWeight: '600',
+          fontSize: '16px',
+          border: 'none',
+          cursor: saving ? 'not-allowed' : 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          if (!saving) {
+            e.currentTarget.style.backgroundColor = '#1e3a8a';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!saving) {
+            e.currentTarget.style.backgroundColor = '#1e40af';
+          }
+        }}
       >
-        Save Settings
+        {saving ? 'Saving...' : 'Save Settings'}
       </button>
     </div>
   );

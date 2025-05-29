@@ -1,4 +1,6 @@
 import OpenAI from 'openai';
+import { aiOrchestrator, TaskType } from '../services/ai/AIOrchestrator';
+import { fallbackManager, FallbackLevel } from '../services/ai/FallbackManager';
 import { matchCommand as matchLocalCommand } from './command-matcher';
 import { processOfflineCommand } from './offline-commands';
 import { processCommandChain } from './command-chain-processor';
@@ -7,7 +9,7 @@ import { commandAnalytics } from './command-analytics';
 import { commandPredictor } from './command-predictor';
 import { commandLearning } from './command-learning';
 
-// Initialize OpenAI with environment variable
+// Initialize OpenAI with environment variable (fallback for direct usage)
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 if (!apiKey) {
   console.error('OpenAI API key not found in environment variables');
@@ -21,7 +23,7 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true // For client-side usage
 });
 
-console.log('OpenAI service initialized with API key:', apiKey ? 'From environment' : 'Using fallback key');
+console.log('Enhanced OpenAI service initialized with AI Orchestration');
 
 // Command execution state and types
 type CommandState = {
@@ -251,27 +253,35 @@ export async function processVoiceCommand(transcript: string): Promise<CommandRe
 // Get information about a specific legal statute
 export async function getLegalInformation(statute: string): Promise<string> {
   try {
-    const prompt = `
-      As a legal assistant specialized in Louisiana law, provide information about the following statute:
-      ${statute}
-      
-      If this is a valid Louisiana statute, provide a brief explanation in a professional tone.
-      If this is not a valid statute, indicate that it could not be found.
-      Keep your response concise and focused on the legal facts.
-    `;
+    const request = `Provide information about Louisiana statute: ${statute}. If this is a valid Louisiana statute, provide a brief explanation in a professional tone. If not valid, indicate it could not be found. Keep response concise and focused on legal facts.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: "You are LARK's legal module, operating like JARVIS from Iron Man. You specialize in Louisiana law and can provide translations of legal terms and concepts while maintaining a professional yet conversational tone." },
-        { role: "user", content: prompt }
-      ]
-    });
+    // Use AIOrchestrator for intelligent routing to best legal analysis model
+    const result = await aiOrchestrator.orchestrate(
+      request,
+      'legal_analysis' as TaskType,
+      'medium',
+      { statute, requestType: 'statute_lookup' }
+    );
 
-    return completion.choices[0].message.content || "Unable to retrieve information for this statute.";
+    return result.response || "Unable to retrieve information for this statute.";
   } catch (error) {
     console.error("Error getting legal information:", error);
-    return "An error occurred while retrieving statute information.";
+    
+    // Fallback to direct OpenAI if orchestrator fails
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: "You are LARK's legal module, operating like JARVIS from Iron Man. You specialize in Louisiana law and can provide translations of legal terms and concepts while maintaining a professional yet conversational tone." },
+          { role: "user", content: `As a legal assistant specialized in Louisiana law, provide information about statute: ${statute}` }
+        ]
+      });
+
+      return completion.choices[0].message.content || "Unable to retrieve information for this statute.";
+    } catch (fallbackError) {
+      console.error("Fallback legal information lookup failed:", fallbackError);
+      return "An error occurred while retrieving statute information.";
+    }
   }
 }
 
@@ -408,63 +418,89 @@ async function executeCommand(command: CommandResponse): Promise<CommandResponse
 
 // New function to assess threat levels
 async function assessThreatLevel(situation: string): Promise<string> {
-  const prompt = `
-    As LARK, assess the following situation for potential threats:
-    ${situation}
-    
-    Consider:
-    - Immediate dangers
-    - Suspicious behaviors
-    - Environmental hazards
-    - Tactical considerations
-    
-    Provide a concise threat assessment with recommended actions.
-  `;
+  try {
+    const request = `Assess the following situation for potential threats: ${situation}. Consider immediate dangers, suspicious behaviors, environmental hazards, and tactical considerations. Provide a concise threat assessment with recommended actions.`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: "You are LARK's threat assessment module, operating like JARVIS from Iron Man. Provide clear, actionable threat assessments while maintaining a professional yet conversational tone. You can translate threats described in other languages when needed." },
-      { role: "user", content: prompt }
-    ],
-    temperature: 0.7
-  });
+    // Use AIOrchestrator for intelligent routing to best threat assessment model
+    const result = await aiOrchestrator.orchestrate(
+      request,
+      'threat_assessment' as TaskType,
+      'high', // High priority for safety-critical assessments
+      { situation, requestType: 'threat_assessment', urgency: 'high' }
+    );
 
-  return completion.choices[0].message.content || "Unable to assess threat level.";
+    return result.response || "Unable to assess threat level.";
+  } catch (error) {
+    console.error("Error in threat assessment:", error);
+    
+    // Fallback to direct OpenAI if orchestrator fails
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: "You are LARK's threat assessment module, operating like JARVIS from Iron Man. Provide clear, actionable threat assessments while maintaining a professional yet conversational tone. You can translate threats described in other languages when needed." },
+          { role: "user", content: `As LARK, assess the following situation for potential threats: ${situation}. Consider immediate dangers, suspicious behaviors, environmental hazards, and tactical considerations. Provide a concise threat assessment with recommended actions.` }
+        ],
+        temperature: 0.7
+      });
+
+      return completion.choices[0].message.content || "Unable to assess threat level.";
+    } catch (fallbackError) {
+      console.error("Fallback threat assessment failed:", fallbackError);
+      return "Unable to assess threat level at this time.";
+    }
+  }
 }
 
 export async function assessTacticalSituation(situation: string): Promise<string> {
   try {
-    const systemPrompt = `
-      You are LARK, a tactical assessment assistant for police officers in Louisiana.
-      Your purpose is to analyze situation descriptions and provide tactical considerations.
-      
-      Guidelines:
-      - Always prioritize officer safety above all else
-      - Be conversational but professional, like JARVIS from Iron Man
-      - Provide clear, actionable advice
-      - Avoid lengthy explanations unless requested
-      - Never suggest actions that would violate civil rights or proper procedure
-      - You can provide translation services when needed
-      - Consider potential threats and recommend appropriate responses
-      - Cite relevant protocols or training standards when applicable
-      - Be concise and direct - officers may be in time-sensitive situations
-      - Format responses for easy reading in stressful situations
-      - Never recommend excessive force or actions that violate proper procedure
-    `;
+    const request = `Assess this situation and provide tactical considerations: ${situation}. Always prioritize officer safety, provide clear actionable advice, consider potential threats and recommend appropriate responses. Be concise and direct for time-sensitive situations.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Assess this situation and provide tactical considerations: ${situation}` }
-      ],
-      temperature: 0.5
-    });
+    // Use AIOrchestrator for intelligent routing to best tactical planning model
+    const result = await aiOrchestrator.orchestrate(
+      request,
+      'tactical_planning' as TaskType,
+      'high', // High priority for tactical assessments
+      { situation, requestType: 'tactical_assessment', urgency: 'high' }
+    );
 
-    return completion.choices[0].message.content || "Unable to assess tactical situation.";
+    return result.response || "Unable to assess tactical situation.";
   } catch (error) {
     console.error("Error assessing tactical situation:", error);
-    return "Unable to process tactical assessment at this time.";
+    
+    // Fallback to direct OpenAI if orchestrator fails
+    try {
+      const systemPrompt = `
+        You are LARK, a tactical assessment assistant for police officers in Louisiana.
+        Your purpose is to analyze situation descriptions and provide tactical considerations.
+        
+        Guidelines:
+        - Always prioritize officer safety above all else
+        - Be conversational but professional, like JARVIS from Iron Man
+        - Provide clear, actionable advice
+        - Avoid lengthy explanations unless requested
+        - Never suggest actions that would violate civil rights or proper procedure
+        - You can provide translation services when needed
+        - Consider potential threats and recommend appropriate responses
+        - Cite relevant protocols or training standards when applicable
+        - Be concise and direct - officers may be in time-sensitive situations
+        - Format responses for easy reading in stressful situations
+        - Never recommend excessive force or actions that violate proper procedure
+      `;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Assess this situation and provide tactical considerations: ${situation}` }
+        ],
+        temperature: 0.5
+      });
+
+      return completion.choices[0].message.content || "Unable to assess tactical situation.";
+    } catch (fallbackError) {
+      console.error("Fallback tactical assessment failed:", fallbackError);
+      return "Unable to process tactical assessment at this time.";
+    }
   }
-} 
+}

@@ -6,7 +6,7 @@ import { useStripe } from '../contexts/StripeContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { CheckCircle2, ArrowRight, Shield } from 'lucide-react';
-import App from '../App';
+import SimpleDashboard from '../components/SimpleDashboard';
 
 const DashboardPage: React.FC = () => {
   const { user, department } = useUserDepartment();
@@ -14,6 +14,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { subscriptionTier } = useStripe();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('Baton Rouge, LA');
   
   useEffect(() => {
     // Check if we're coming from a successful subscription
@@ -71,45 +72,10 @@ const DashboardPage: React.FC = () => {
     );
   }
   
-  // Otherwise show the main dashboard with the App component
+  // Otherwise show the Clean Dashboard
   return (
     <div className="min-h-screen">
-      {/* Modern header with law enforcement blue gradient */}
-      <div className="p-4 bg-gradient-to-r from-[#002166] to-[#003087]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-lg">
-              <img src="/lark-logo.svg" alt="LARK Logo" className="h-14 w-14" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-wide"></h1>
-              <p className="text-blue-100 text-sm">
-                {subscriptionTier ? `LARK ${subscriptionName}` : 'LARK Assistant'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 mt-2 md:mt-0">
-            {/* Status badge */}
-            <div className="bg-white/10 px-3 py-1.5 rounded-full flex items-center text-sm text-blue-100 border border-white/5 backdrop-blur-sm">
-              <div className="h-2 w-2 rounded-full bg-green-400 mr-2 animate-pulse"></div>
-              Active
-            </div>
-            
-            {/* Account button with improved styling */}
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={() => navigate('/account')}
-              className="text-blue-950 bg-white/90 border-blue-200 hover:bg-white rounded-full px-4 font-medium shadow-md"
-            >
-              My Account
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <App />
+      <SimpleDashboard onLocationChange={setCurrentLocation} />
     </div>
   );
 };

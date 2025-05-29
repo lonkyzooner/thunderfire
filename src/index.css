@@ -1,371 +1,131 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&family=Manrope:wght@200;300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
-
+/* Base imports only - no custom fonts */
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
 @layer base {
   html {
-    font-family: 'Inter', 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
-    letter-spacing: -0.01em;
-    font-size: var(--app-font-size, 16px);
+    font-family: system-ui, sans-serif;
+    font-size: 16px;
   }
 
-  .font-heading {
-    font-family: 'Space Grotesk', 'Poppins', 'Manrope', sans-serif;
-    letter-spacing: -0.03em;
-  }
-
-  .font-mono {
-    font-family: 'Roboto Mono', monospace;
-  }
-
-  .font-orbitron {
-    font-family: 'Orbitron', sans-serif;
-  }
 
   :root {
-    --app-font-size: 16px;
-
-    /* LARK Overhauled Color Scheme */
-    --background: 222 50% 96%; /* Soft blue-gray */
-    --foreground: 230 15% 10%; /* Deep navy for text */
-
-    --card: 240 12% 18%; /* Dark card for glassmorphism */
-    --card-foreground: 220 40% 98%;
-
-    --popover: 240 12% 18%;
-    --popover-foreground: 220 40% 98%;
-
-    /* Primary: Vibrant purple/blue gradient */
-    --primary: 265 85% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary: Soft purple/teal for backgrounds */
-    --secondary: 200 80% 92%;
-    --secondary-foreground: 265 85% 40%;
-
-    /* Muted: Subtle gray for containers */
-    --muted: 220 15% 90%;
-    --muted-foreground: 220 15% 30%;
-
-    /* Accent: Electric teal for highlights */
-    --accent: 180 95% 55%;
-    --accent-foreground: 220 40% 98%;
-
-    /* Destructive: Bright coral for alerts */
-    --destructive: 10 90% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Glassmorphism effect */
-    --glass-bg: rgba(30, 34, 90, 0.18);
-    --glass-blur: 18px;
-    --glass-border: rgba(255,255,255,0.18);
-
-    --border: 220 15% 80%;
-    --input: 220 15% 80%;
-    --ring: 265 85% 60%;
-
-    --radius: 0.75rem;
-
-    /* Status colors for feedback */
-    --success: 142 70% 45%;
-    --warning: 38 92% 50%;
-    --info: 200 90% 50%;
-    --low-battery: 358 75% 55%;
-  }
-
-  [data-theme="dark"] {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 15%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 15%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 213 94% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 213 30% 20%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 222 20% 20%;
-    --muted-foreground: 215 25% 75%;
-
-    --accent: 183 85% 45%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 358 75% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 215 25% 30%;
-    --input: 215 25% 30%;
-    --ring: 213 94% 50%;
-  }
-
-  [data-theme="light"] {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 15%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 15%;
-
-    --primary: 213 94% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 213 70% 95%;
-    --secondary-foreground: 213 80% 30%;
-
-    --muted: 220 15% 93%;
-    --muted-foreground: 215 25% 35%;
-
-    --accent: 183 85% 45%;
-    --accent-foreground: 222 47% 15%;
-
-    --destructive: 358 75% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 215 25% 85%;
-    --input: 215 25% 85%;
-    --ring: 213 94% 50%;
-  }
-
-  .high-contrast {
+    /* Functional variables only - minimal styling */
     --background: 0 0% 100%;
-    --foreground: 220 33% 6%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 220 33% 6%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 33% 6%;
-
-    --primary: 213 100% 26%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 220 33% 12%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 220 33% 12%;
-    --muted-foreground: 217.2 32.6% 40%;
-
-    --accent: 220 33% 12%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 220 33% 20%;
+    --foreground: 0 0% 0%;
+    --border: 0 0% 80%;
+    --radius: 0;
   }
+
+  /* No theme variations */
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+/* Basic reset for all elements */
 
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* Widget styles */
+/* Functional components only - no styling */
 .widget {
-  @apply bg-card rounded-lg shadow-lg border border-border overflow-hidden flex flex-col h-full;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .widget-header {
-  @apply cursor-move px-4 py-2 font-bold text-lg border-b border-border bg-gradient-to-r from-secondary/60 to-secondary/40 text-foreground;
+  display: flex;
+  justify-content: space-between;
 }
 
 .widget-content {
-  @apply flex-1 overflow-hidden flex flex-col;
+  flex: 1;
+  overflow: auto;
 }
 
-@layer components {
-  .lark-button {
-    @apply h-12 px-4 py-2 bg-secondary border border-border/50 rounded-md
-    hover:bg-secondary/90 active:scale-[0.98] transition-all duration-150
-    flex items-center gap-2
-    text-foreground text-sm font-medium;
-  }
-
-  .lark-button-icon {
-    @apply text-primary text-lg;
-  }
-
-  .lark-section {
-    @apply mb-4 pb-2 border-b border-border;
-  }
-
-  .lark-section-title {
-    @apply text-sm font-semibold text-primary mb-2 uppercase tracking-wide;
-  }
-
-  .lark-status-bar {
-    @apply flex items-center justify-between p-2 bg-secondary/50 border border-border/50
-    rounded-md mb-3 text-xs font-medium;
-  }
-
-  .low-power * {
-    @apply !animate-none transition-none;
-  }
-
-  .glass-panel {
-    @apply bg-card border border-border/50 rounded-md p-4
-    shadow-sm;
-  }
+.widget-footer {
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Grid layout styles */
+/* Functional components only - no styling */
+
+/* Grid layout - functional only */
 .react-grid-layout {
-  @apply relative;
+  position: relative;
 }
 
 .react-grid-item {
-  @apply transition-[background] duration-150 rounded-lg;
+  position: relative;
 }
 
 .react-grid-item.react-grid-placeholder {
-  @apply bg-primary/20 rounded-lg border-2 border-primary/40;
+  position: relative;
 }
 
 .react-resizable-handle {
-  @apply opacity-0 transition-opacity duration-200;
-}
-
-.react-grid-item:hover .react-resizable-handle {
-  @apply opacity-100;
+  position: absolute;
 }
 
 .record-button {
-  @apply w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600
-  flex items-center justify-center text-white shadow-xl relative
-  hover:scale-105 active:scale-95 transition-all duration-200
-  ring-2 ring-red-500/20;
-}
-
-.record-button::before {
-  content: '';
-  @apply absolute inset-0 rounded-full animate-pulse border-2 border-red-500/50;
-}
-
-.record-button.active::before {
-  @apply animate-ripple;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wave-animation {
-  @apply flex items-end h-6 space-x-1;
+  display: flex;
 }
 
 .wave-bar {
-  @apply w-1 bg-lark-blue rounded-t;
-  height: 20%;
-  animation: wave 1.2s ease-in-out infinite;
-}
-
-.wave-bar:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.wave-bar:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-.wave-bar:nth-child(4) {
-  animation-delay: 0.6s;
-}
-
-.wave-bar:nth-child(5) {
-  animation-delay: 0.8s;
+  width: 4px;
+  /* Functional elements without animations */
 }
 
 .hologram {
-  @apply fixed inset-0 flex items-center justify-center pointer-events-none;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .hologram-content {
-  @apply w-64 h-72 bg-accent/10 backdrop-blur-2xl rounded-3xl
-  ring-1 ring-accent/30 flex items-center justify-center
-  animate-fade-in opacity-80 shadow-2xl
-  hover:bg-accent/15 transition-all duration-300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
+/* Functional elements without animations */
 
 .listening-indicator {
-  @apply absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white animate-pulse;
+  position: absolute;
 }
 
-/* New modernized styles */
 .dispatch-connect {
-  @apply fixed inset-0 flex items-center justify-center pointer-events-none;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .dispatch-connect-content {
-  @apply w-4/5 max-w-md bg-secondary/90 backdrop-blur-2xl rounded-3xl
-  ring-1 ring-accent/30 p-8 animate-fade-in shadow-2xl
-  border-0;
+  width: 80%;
+  max-width: 400px;
 }
 
 .pulse-ring {
-  @apply absolute -inset-1 rounded-full;
-  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  position: absolute;
 }
 
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.7);
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(1.2);
-    opacity: 0;
-  }
-}
+/* Functional elements without animations */
 
-/* Modernized buttons */
 .modern-button {
-  @apply transition-all duration-300 ease-in-out transform hover:scale-105 
-  hover:shadow-lg active:scale-95 bg-gradient-to-br from-lark-light-blue/20 
-  to-lark-blue/10 backdrop-blur-sm border border-white/10 rounded-xl;
+  display: inline-block;
 }
 
-/* Command history item with animation */
 .command-history-item {
-  @apply py-2 border-b border-white/5 transition-all duration-300;
-  animation: slideIn 0.3s ease-out forwards;
-  opacity: 0;
-  transform: translateY(10px);
+  padding: 8px 0;
 }
 
-@keyframes slideIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.command-history-item:nth-child(1) { animation-delay: 0.1s; }
-.command-history-item:nth-child(2) { animation-delay: 0.2s; }
-.command-history-item:nth-child(3) { animation-delay: 0.3s; }
-.command-history-item:nth-child(4) { animation-delay: 0.4s; }
-.command-history-item:nth-child(5) { animation-delay: 0.5s; }
+/* Functional elements without animations */

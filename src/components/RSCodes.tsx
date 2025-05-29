@@ -6,11 +6,9 @@ import { getLegalInformation } from '../lib/openai-service';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
-import { Loader2, Mic, StopCircle, Search, BookOpen, Scale, AlertTriangle, Volume2, ExternalLink, BookMarked, FileText, Link2 } from 'lucide-react';
+import { Loader2, Mic, StopCircle, Search, BookOpen, Scale, AlertTriangle, Volume2, Link2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useVoice } from '../contexts/VoiceContext';
 import { liveKitVoiceService } from '../services/livekit/LiveKitVoiceService';
 
@@ -374,319 +372,162 @@ export function RSCodes() {
     }
   };
 
-  // Collapsible sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
   return (
-    <aside
-      className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'max-w-md w-full' : 'max-w-xs w-16'} bg-white/90 rounded-2xl shadow border border-gray-200`}
-      aria-label="Statutes Sidebar"
-    >
-      <button
-        className="absolute left-2 top-2 z-10 bg-blue-100 hover:bg-blue-200 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        aria-label={sidebarOpen ? "Collapse Statutes Sidebar" : "Expand Statutes Sidebar"}
-        aria-expanded={sidebarOpen}
-        onClick={() => setSidebarOpen((open) => !open)}
-        tabIndex={0}
-      >
-        <span aria-hidden="true">{sidebarOpen ? "⏴" : "⏵"}</span>
-      </button>
-      <div className={`p-4 space-y-6 ${sidebarOpen ? '' : 'hidden'}`}>
-          <div className="flex flex-col items-center justify-center mb-6 gap-2 text-center">
-            <h2 className="text-2xl font-heading font-extrabold text-[hsl(var(--primary))] flex items-center justify-center gap-2">
-              <BookMarked className="h-6 w-6 text-[hsl(var(--accent))]" />
-              Louisiana Criminal Code Analysis
-            </h2>
-            <Badge variant="outline" className="text-xs text-muted-foreground border border-border bg-white/80 font-semibold mt-2 mb-2 px-4 py-2 rounded-full">
-              LARK Legal Assistant
-            </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
-              className="text-muted-foreground hover:text-foreground font-heading font-semibold mt-2"
-            >
-              <BookOpen className="h-4 w-4 mr-1" />
-              {showAdditionalInfo ? "Hide Info" : "Quick Codes"}
-            </Button>
+    <div>
+      <h2>Louisiana Criminal Code Analysis</h2>
+      <Button onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}>
+        {showAdditionalInfo ? "Hide Info" : "Show Common Codes"}
+      </Button>
+
+      {showAdditionalInfo && (
+        <div>
+          <p>Common Louisiana Criminal Codes:</p>
+          <div>
+            {commonCodes.map((code) => (
+              <div key={code.code} onClick={() => handleQuickCodeSelect(code.code)}>
+                {code.code} - {code.name}
+              </div>
+            ))}
           </div>
-
-          {showAdditionalInfo && (
-            <div className="mb-6 bg-muted/60 p-4 rounded-2xl border border-border shadow-inner">
-              <div className="text-sm text-foreground mb-2 font-semibold">
-                Common Louisiana Criminal Codes:
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {commonCodes.map((code) => (
-                  <Badge
-                    key={code.code}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-muted border-border font-mono font-semibold px-3 py-2 rounded-xl text-xs"
-                    onClick={() => handleQuickCodeSelect(code.code)}
-                  >
-                    {code.code} - {code.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(value as "lookup" | "analyze")
-            }
-            className="w-full"
-          >
-            <TabsList className="flex mb-6 bg-gradient-to-r from-[hsl(var(--primary))/80] via-[hsl(var(--accent))/70] to-[hsl(var(--primary))/80] p-1 rounded-full shadow-lg border border-[rgba(255,255,255,0.18)] backdrop-blur-lg gap-2">
-              <TabsTrigger
-                value="analyze"
-                className="flex-1 rounded-full py-3 px-2 md:px-4 bg-white/10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[hsl(var(--primary))] data-[state=active]:to-[hsl(var(--accent))] data-[state=active]:text-white text-white/80 font-heading font-semibold text-base shadow-md transition-all duration-300 hover:text-white focus-ring active:scale-98"
-              >
-                <Scale className="h-4 w-4 mr-2" /> Analyze Situation
-              </TabsTrigger>
-              <TabsTrigger
-                value="lookup"
-                className="flex-1 rounded-full py-3 px-2 md:px-4 bg-white/10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[hsl(var(--primary))] data-[state=active]:to-[hsl(var(--accent))] data-[state=active]:text-white text-white/80 font-heading font-semibold text-base shadow-md transition-all duration-300 hover:text-white focus-ring active:scale-98"
-              >
-                <Search className="h-4 w-4 mr-2" /> Lookup Statute
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="lookup" className="space-y-4 mt-0">
-              <div className="space-y-2">
-                <div className="flex items-center text-foreground text-base font-semibold">
-                  <Search className="h-4 w-4 mr-1 text-primary" />
-                  <span>Enter Louisiana Statute Reference</span>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={statuteInput}
-                    onChange={(e) => setStatuteInput(e.target.value)}
-                    placeholder="e.g., 'La. R.S. 14:30' or '14:30'"
-                    className="flex-1 rounded-xl border border-border bg-white/80 text-foreground px-4 py-3 font-medium focus:ring-2 focus:ring-primary/40 transition-all"
-                  />
-                  <Button
-                    onClick={() =>
-                      handleStatuteLookup(
-                        statuteInput,
-                        setIsLoading,
-                        setResult,
-                        setSuggestedCharges,
-                        synthesizeSpeech,
-                        resultRef,
-                        setStatuteUrl
-                      )
-                    }
-                    disabled={!statuteInput.trim() || isLoading}
-                    className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-heading font-bold rounded-xl px-6 py-3 shadow-lg hover:scale-105 active:scale-98 transition-all duration-200 whitespace-nowrap"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Lookup"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="analyze" className="space-y-4 mt-0">
-              <div className="space-y-4 flex flex-col items-center justify-center">
-                <div className="flex flex-col items-center w-full">
-                  <div className="flex items-center text-foreground text-base font-semibold mb-2 justify-center">
-                    <Scale className="h-4 w-4 mr-1 text-[hsl(var(--primary))]" />
-                    <span>Describe the situation</span>
-                  </div>
-                  {hasRecognitionSupport && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleVoiceInput}
-                      className={`flex items-center gap-1 rounded-full font-heading font-semibold mt-2 mb-2 ${
-                        listening
-                          ? "bg-destructive/10 text-destructive border-destructive/30"
-                          : "bg-primary/10 text-primary border-primary/30"
-                      }`}
-                    >
-                      {listening ? (
-                        <>
-                          <StopCircle className="h-4 w-4" /> Stop
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="h-4 w-4" /> Voice Input
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-                {listening && (
-                  <div className="bg-blue-100 p-2 rounded-xl text-blue-900 text-sm flex items-center shadow-inner w-full justify-center">
-                    <Mic className="h-4 w-4 mr-2 text-destructive animate-pulse" />
-                    Listening... speak the situation details
-                  </div>
-                )}
-                <Textarea
-                  value={situationInput}
-                  onChange={(e) => setSituationInput(e.target.value)}
-                  placeholder="E.g.: Subject was observed taking merchandise valued at $75 from a store without paying and concealing it in their backpack..."
-                  className="min-h-[120px] rounded-xl border border-border bg-white/80 text-foreground px-4 py-3 font-medium focus:ring-2 focus:ring-primary/40 transition-all w-full"
-                />
-                <Button
-                  onClick={handleSituationAnalysis}
-                  disabled={!situationInput.trim() || isLoading}
-                  className="w-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-heading font-bold rounded-full px-6 py-3 shadow-lg hover:scale-105 active:scale-98 transition-all duration-200 mt-2"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Scale className="h-4 w-4 mr-2" />
-                  )}
-                  Analyze & Suggest Charges
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {isLoading && (
-            <div className="flex items-center justify-center p-6">
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
-                <p className="text-muted-foreground text-sm">
-                  Analyzing Louisiana statutes...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {(result || suggestedCharges.length > 0) && !isLoading && (
-            <div ref={resultRef} className="mt-8">
-              <Card className="rounded-2xl border border-border shadow-xl bg-white/90 backdrop-blur-lg">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-heading font-bold flex items-center gap-2 text-[hsl(var(--primary))]">
-                      <AlertTriangle className="h-5 w-5 text-warning" />
-                      Analysis Result
-                    </CardTitle>
-                    {isSpeaking ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                onClick={stopSpeaking}
-                className="text-xs h-7 px-2 text-destructive border-destructive/30 bg-destructive/10 hover:bg-destructive/20"
-              >
-                <Volume2 className="h-3 w-3 mr-1 animate-pulse" /> Stop Audio
-              </Button>
-            ) : (
-              result && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => {
-                    // Build a complete spoken summary including all charges and the bottom summary
-                    let fullSummary = ''; // Initialize fullSummary properly
-                    // Add each charge
-                    if (suggestedCharges.length > 0) {
-                      suggestedCharges.forEach((charge, index) => {
-                        fullSummary += `${charge.code}, ${charge.name}. ${charge.reason}. `;
-                        
-                        if (index < suggestedCharges.length - 1) {
-                          fullSummary += "Next, ";
-                        }
-                      });
-                      
-                      // Add the bottom summary
-                      if (result) {
-                        fullSummary += ` In conclusion, ${result}`;
-                      }
-                    } else if (result) {
-                      fullSummary += result;
-                    }
-                    
-                    synthesizeSpeech(fullSummary);
-                  }}
-                  className="text-xs h-7 px-2 text-primary border-primary/30 bg-primary/10 hover:bg-primary/20"
-                >
-                  <Volume2 className="h-3 w-3 mr-1" /> Read Result
-                </Button>
-              )
-                )}  
-              </div>
-            </CardHeader>
-            <CardContent>
-              {suggestedCharges.length > 0 && (
-                <div className="space-y-3 mb-4">
-                  {suggestedCharges.map((charge, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-card p-3 rounded border border-border hover:border-primary/30 transition-colors cursor-pointer"
-                      onClick={() => handleQuickCodeSelect(charge.code)}
-                    >
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="font-medium text-primary">
-                          {charge.code}
-                        </div>
-                        <Badge variant="outline" className="text-xs bg-muted text-foreground">
-                          {charge.name}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground text-sm">{charge.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {result && (
-                <div className="p-4 bg-card rounded border border-border">
-                  <div className="text-foreground whitespace-pre-line text-sm">
-                    {result}
-                  </div>
-                </div>
-              )}
-                
-              {activeTab === 'analyze' && suggestedCharges.length > 0 && (
-                <div className="mt-4 text-xs text-blue-400/70 italic">
-                  Note: Click on any charge above to lookup its full statutory details
-                </div>
-              )}
-              
-              <div className="additional-charge-input mt-4">
-                <Textarea
-                  placeholder="Suggest an additional charge..."
-                  value={additionalCharge}
-                  onChange={(e) => setAdditionalCharge(e.target.value)}
-                  className="mb-2"
-                />
-                <Button onClick={handleAdditionalChargeSubmit}>Submit Charge</Button>
-                {additionalChargeResponse && (
-                  <div className="p-4 bg-card rounded border border-border mt-4">
-                    <div className="text-foreground whitespace-pre-line text-sm">
-                      {additionalChargeResponse}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="border-t pt-4">
-              <div className="flex justify-between w-full items-center">
-                <span className="text-xs text-muted-foreground">Powered by LiveKit AI</span>
-                {statuteUrl && (
-                  <a 
-                    href={statuteUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary flex items-center gap-1 hover:underline"
-                  >
-                    <Link2 className="h-3 w-3" /> View Official Statute
-                  </a>
-                )}
-              </div>
-            </CardFooter>
-          </Card>
         </div>
       )}
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "lookup" | "analyze")}
+      >
+        <TabsList>
+          <TabsTrigger value="analyze">Analyze Situation</TabsTrigger>
+          <TabsTrigger value="lookup">Lookup Statute</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lookup">
+          <div>
+            <label>Enter Louisiana Statute Reference</label>
+            <div>
+              <Input
+                value={statuteInput}
+                onChange={(e) => setStatuteInput(e.target.value)}
+                placeholder="e.g., 'La. R.S. 14:30' or '14:30'"
+              />
+              <Button
+                onClick={() =>
+                  handleStatuteLookup(
+                    statuteInput,
+                    setIsLoading,
+                    setResult,
+                    setSuggestedCharges,
+                    synthesizeSpeech,
+                    resultRef,
+                    setStatuteUrl
+                  )
+                }
+                disabled={!statuteInput.trim() || isLoading}
+              >
+                {isLoading ? "Loading..." : "Lookup"}
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analyze">
+          <div>
+            <label>Describe the situation</label>
+            {hasRecognitionSupport && (
+              <Button onClick={handleVoiceInput}>
+                {listening ? "Stop" : "Voice Input"}
+              </Button>
+            )}
+            <Textarea
+              value={situationInput}
+              onChange={(e) => setSituationInput(e.target.value)}
+              placeholder="E.g.: Subject was observed taking merchandise valued at $75 from a store without paying and concealing it in their backpack..."
+            />
+            <Button
+              onClick={handleSituationAnalysis}
+              disabled={!situationInput.trim() || isLoading}
+            >
+              {isLoading ? "Analyzing..." : "Analyze & Suggest Charges"}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {isLoading && <div>Analyzing Louisiana statutes...</div>}
+
+      {(result || suggestedCharges.length > 0) && !isLoading && (
+        <div ref={resultRef}>
+          <h2>Analysis Result</h2>
+          {isSpeaking ? (
+            <Button onClick={stopSpeaking}>Stop Audio</Button>
+          ) : (
+            result && (
+              <Button
+                onClick={() => {
+                  let fullSummary = "";
+                  if (suggestedCharges.length > 0) {
+                    suggestedCharges.forEach((charge, index) => {
+                      fullSummary += `${charge.code}, ${charge.name}. ${charge.reason}. `;
+                      if (index < suggestedCharges.length - 1) {
+                        fullSummary += "Next, ";
+                      }
+                    });
+                    
+                    if (result) {
+                      fullSummary += ` In conclusion, ${result}`;
+                    }
+                  } else if (result) {
+                    fullSummary += result;
+                  }
+                  
+                  synthesizeSpeech(fullSummary);
+                }}
+              >
+                Read Result
+              </Button>
+            )
+          )}  
+          </div>
+          
+          {suggestedCharges.length > 0 && (
+            <div>
+              {suggestedCharges.map((charge, index) => (
+                <div key={index} onClick={() => handleQuickCodeSelect(charge.code)}>
+                  <div>
+                    {charge.code} - {charge.name}
+                  </div>
+                  <p>{charge.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {result && <div>{result}</div>}
+            
+          {activeTab === 'analyze' && suggestedCharges.length > 0 && (
+            <div>Note: Click on any charge above to lookup its full statutory details</div>
+          )}
+          
+          <div>
+            <Textarea
+              placeholder="Suggest an additional charge..."
+              value={additionalCharge}
+              onChange={(e) => setAdditionalCharge(e.target.value)}
+            />
+            <Button onClick={handleAdditionalChargeSubmit}>Submit Charge</Button>
+            {additionalChargeResponse && <div>{additionalChargeResponse}</div>}
+          </div>
+          
+          <div>
+            <span>Powered by LiveKit AI</span>
+            {statuteUrl && (
+              <a href={statuteUrl} target="_blank" rel="noopener noreferrer">
+                View Official Statute
+              </a>
+            )}
+          </div>
         </div>
-    </aside>
+      )}
+    </div>
   );
-} 
+}

@@ -1,15 +1,29 @@
 // LarkChat.tsx
 // Basic multi-modal chat interface for LARK
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import SuggestionsBar, { Suggestion } from './SuggestionsBar';
 import IncidentTimeline, { TimelineEvent } from './IncidentTimeline';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useLiveKitVoice } from '../hooks/useLiveKitVoice';
 import { useVoiceAssistantCore } from '../hooks/useVoiceAssistantCore';
-import { processVoiceCommand, CommandResponse } from '../lib/openai-service';
+import { CommandResponse } from '../lib/openai-service';
 import OfficerMap from './OfficerMap';
+import AuthContext, { AuthContextType } from '../contexts/AuthContext';
+import { ConversationContext } from '../contexts/ConversationContext';
+import { orchestratorService } from '../services/OrchestratorService';
+
+interface LarkChatProps {}
+
 export function LarkChat() {
+  const { user } = useContext(AuthContext) as AuthContextType;
+  const { conversationHistory, addMessage } = useContext(ConversationContext);
+  const orgId = user?.orgId;
+  const userId = user?.sub;
+
+  if (!orgId || !userId) {
+    return (<div>Error: Could not retrieve orgId or userId from AuthContext. Please ensure the user is logged in and has a valid profile.</div>);
+  }
   const { speak, stopSpeaking, isSpeaking } = useLiveKitVoice();
   const {
     listening,
@@ -64,7 +78,7 @@ export function LarkChat() {
       setLastSuggestionTime(now);
     }
   }
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+  //const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   // For timeline: store timestamps for each message
   const [messageTimestamps, setMessageTimestamps] = useState<number[]>([]);
   const [mapCommand, setMapCommand] = useState<CommandResponse | null>(null);
@@ -76,41 +90,49 @@ export function LarkChat() {
   const handleSend = async () => {
     if (!text.trim()) return;
     const userMsg = { role: 'user' as const, content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    //setMessages((prev) => [...prev, userMsg]);
+    addMessage(orgId, userId, 'user', text);
     setMessageTimestamps((prev) => [...prev, Date.now()]);
     setText('');
     maybeShowSuggestions("afterSend");
     try {
-      const response = await processVoiceCommand(text);
+      const response = await orchestratorService.receiveInput({
+        orgId,
+        userId,
+        type: 'text',
+        content: text,
+      });
       // If the response is a map action, trigger map update
       if (
-        response.action === 'show_location' ||
-        response.action === 'plot_perimeter' ||
-        response.action === 'highlight_route' ||
-        response.action === 'center_map' ||
-        response.action === 'mark_point' ||
-        response.action === 'show_nearest_resource' ||
-        response.action === 'draw_zone'
+        (response as any).action === 'show_location' ||
+        (response as any).action === 'plot_perimeter' ||
+        (response as any).action === 'highlight_route' ||
+        (response as any).action === 'center_map' ||
+        (response as any).action === 'mark_point' ||
+        (response as any).action === 'show_nearest_resource' ||
+        (response as any).action === 'draw_zone'
       ) {
-        setMapCommand(response);
+        setMapCommand(response as any);
       }
       // Add assistant message to chat
-      setMessages((prev) => {
+      //setMessages((prev) => {
         const assistantMsg: { role: "assistant"; content: string } = {
           role: "assistant",
-          content: response.result || '[Map action executed]'
+          content: (response as any).content || '[Map action executed]'
         };
         // Speak the assistant's reply using LiveKit TTS
         stopSpeaking();
         speak(assistantMsg.content);
         setMessageTimestamps((prev) => [...prev, Date.now()]);
-        return [...prev, assistantMsg];
-      });
+        addMessage(orgId, userId, 'assistant', assistantMsg.content);
+        //return [...prev, assistantMsg];
+      //});
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Sorry, there was an error processing your command.' }
-      ]);
+      //setMessages((prev) => [
+      //  ...prev,
+      //  { role: 'assistant', content: 'Sorry, there was an error processing your command.' }
+      //]);
+      addMessage(orgId, userId, 'assistant', 'Sorry, there was an error processing your command.');
     }
   };
 
@@ -125,7 +147,7 @@ export function LarkChat() {
         <OfficerMap mapCommand={mapCommand} />
       </div>
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
-        {messages.map((msg, idx) => (
+        {conversationHistory.map((msg, idx) => (
           <div
             key={idx}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}
@@ -147,9 +169,9 @@ export function LarkChat() {
       <SuggestionsBar suggestions={suggestions} onDismiss={handleDismissSuggestions} />
       {/* Incident Timeline */}
       <IncidentTimeline
-        events={messages.map((msg, idx) => ({
+        events={conversationHistory.map((msg, idx) => ({
           id: `msg-${idx}`,
-          timestamp: messageTimestamps[idx] || Date.now(),
+          timestamp: Date.now(), //messageTimestamps[idx] || Date.now(),
           type: msg.role,
           content: msg.content,
         }))}

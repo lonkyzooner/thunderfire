@@ -1,13 +1,14 @@
 // Constants for LiveKit configuration
-const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'wss://lark-za4hpayr.livekit.cloud';
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
+if (!LIVEKIT_URL) {
+  throw new Error('[tokenService] Missing required environment variable: VITE_LIVEKIT_URL');
+}
 
 // API URL for the backend server
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-// For development fallback only - should not be used in production
 import { AccessToken } from 'livekit-server-sdk';
-const DEV_LIVEKIT_API_KEY = 'APIEm6ouy8xmioi';
-const DEV_LIVEKIT_API_SECRET = 'FbPHdgLMFZVna03ncZ9URmqrq1wO1ijlBgh5ZLNvM3G';
+// All LiveKit credentials must be provided via environment variables for all environments.
 
 // Token generation will now use the proper API secret instead of a pre-generated demo token
 
@@ -33,13 +34,7 @@ export async function getSecureToken(roomName: string, identity: string): Promis
     } catch (backendError) {
       console.warn('[TokenService] Backend token generation failed, using fallback:', backendError);
       
-      // Fallback to local token generation for development only
-      if (import.meta.env.DEV) {
-        console.warn('[TokenService] Using development fallback for token generation');
-        return await generateDevFallbackToken(uniqueRoomName, identity);
-      }
-      
-      // In production, we should not expose API keys, so we rethrow the error
+      // In all environments, fail if backend token generation fails
       throw backendError;
     }
   } catch (error) {
@@ -87,31 +82,7 @@ async function getTokenFromBackend(roomName: string, identity: string): Promise<
  * @param identity User identity
  * @returns Generated token
  */
-async function generateDevFallbackToken(roomName: string, identity: string): Promise<string> {
-  try {
-    console.log(`[TokenService] Generating development fallback token for room: ${roomName}, identity: ${identity}`);
-    
-    // Create a new token
-    const token = new AccessToken(DEV_LIVEKIT_API_KEY, DEV_LIVEKIT_API_SECRET, {
-      identity: identity,
-      ttl: 24 * 60 * 60, // 24 hours expiry
-    });
-    
-    // Add grants to the token
-    token.addGrant({
-      room: roomName,
-      roomJoin: true,
-      canPublish: true,
-      canSubscribe: true,
-    });
-    
-    // Generate the token string
-    return token.toJwt();
-  } catch (error) {
-    console.error('[TokenService] Error generating token:', error);
-    throw error;
-  }
-}
+// Development fallback token generation has been removed for security. All tokens must be generated securely via backend and environment variables.
 
 /**
  * Get a token for a LiveKit agent

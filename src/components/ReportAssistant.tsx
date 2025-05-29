@@ -19,33 +19,33 @@ const ReportAssistant = (): JSX.Element => {
   }, [savedReports]);
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-lg shadow-lg overflow-hidden">
-      <div className="flex-none p-4 border-b border-border">
-        <h2 className="text-lg font-semibold">Lark Report Assistant</h2>
+    <div>
+      <div>
+        <h2>Lark Report Assistant</h2>
       </div>
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Report Title</label>
+      <div>
+        <div>
+          <label>Report Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter report title"
-            className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+
           />
         </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Report Content</label>
+        <div>
+          <label>Report Content</label>
           <textarea
             value={reportText}
             onChange={(e) => setReportText(e.target.value)}
             placeholder="Enter or edit the incident report here..."
             rows={8}
-            className="w-full px-4 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-vertical"
+
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div>
           <button
-            className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+
             onClick={async () => {
               setLoading(true);
               setFeedback(null);
@@ -135,7 +135,7 @@ ${reportText}`;
               }
               setLoading(false);
             }}
-            className="px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors disabled:opacity-50"
+
             disabled={loading}
           >
             {loading ? "Reviewing..." : "Review Report"}
@@ -149,43 +149,43 @@ ${reportText}`;
               setReportText('');
               if (editorRef.current) editorRef.current.innerHTML = '';
             }}
-            className="px-4 py-2 rounded-md bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+
           >
             Save Report
           </button>
         </div>
         {feedback && (
-          <div className="p-4 rounded-md bg-muted">
-            <h3 className="font-semibold mb-2 text-foreground">Report Review Suggestions:</h3>
-            <div className="whitespace-pre-line text-sm text-muted-foreground">{feedback}</div>
+          <div>
+            <h3>Report Review Suggestions:</h3>
+            <div>{feedback}</div>
             <button
-              className="mt-2 px-3 py-1 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs transition-colors"
+
               onClick={() => setFeedback(null)}
             >
               Clear Review
             </button>
           </div>
         )}
-        <div className="mt-6 border-t border-border pt-4">
-          <h3 className="font-semibold mb-2 text-foreground">Saved Reports</h3>
-          <ul className="space-y-2 max-h-48 overflow-y-auto rounded-md p-2 bg-muted">
+        <div>
+          <h3>Saved Reports</h3>
+          <ul>
             {savedReports.map(r => (
-              <li key={r.id} className="flex justify-between items-center border-b border-border/50 pb-1">
-                <span className="truncate text-foreground">{r.title}</span>
-                <div className="flex gap-1">
+              <li key={r.id}>
+                <span>{r.title}</span>
+                <div>
                   <button
                     onClick={() => {
                       setReportText(r.content);
                       if (editorRef.current) editorRef.current.innerHTML = r.content;
                       setTitle(r.title);
                     }}
-                    className="text-xs px-2 py-1 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
+
                   >
                     Load
                   </button>
                   <button
                     onClick={() => setSavedReports(prev => prev.filter(x => x.id !== r.id))}
-                    className="text-xs px-2 py-1 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+
                   >
                     Delete
                   </button>

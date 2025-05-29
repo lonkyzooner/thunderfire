@@ -59,22 +59,25 @@ export const SUBSCRIPTION_TIERS = {
   },
 };
 
+import { getEnv } from './system/envService';
+
 // Stripe price IDs (replace with your actual Stripe price IDs)
+const env = getEnv();
 export const STRIPE_PRICE_IDS = {
-  basic_monthly: import.meta.env.VITE_STRIPE_PRICE_BASIC_MONTHLY || 'price_basic_monthly',
-  standard_monthly: import.meta.env.VITE_STRIPE_PRICE_STANDARD_MONTHLY || 'price_standard_monthly',
-  premium_monthly: import.meta.env.VITE_STRIPE_PRICE_PREMIUM_MONTHLY || 'price_premium_monthly',
-  enterprise_monthly: import.meta.env.VITE_STRIPE_PRICE_ENTERPRISE_MONTHLY || 'price_enterprise_monthly',
-  basic_annual: import.meta.env.VITE_STRIPE_PRICE_BASIC_ANNUAL || 'price_basic_annual',
-  standard_annual: import.meta.env.VITE_STRIPE_PRICE_STANDARD_ANNUAL || 'price_standard_annual',
-  premium_annual: import.meta.env.VITE_STRIPE_PRICE_PREMIUM_ANNUAL || 'price_premium_annual',
-  enterprise_annual: import.meta.env.VITE_STRIPE_PRICE_ENTERPRISE_ANNUAL || 'price_enterprise_annual',
+  basic_monthly: env.STRIPE_PRICE_BASIC_MONTHLY,
+  standard_monthly: env.STRIPE_PRICE_STANDARD_MONTHLY,
+  premium_monthly: env.STRIPE_PRICE_PREMIUM_MONTHLY,
+  enterprise_monthly: env.STRIPE_PRICE_ENTERPRISE_MONTHLY,
+  basic_annual: env.STRIPE_PRICE_BASIC_ANNUAL,
+  standard_annual: env.STRIPE_PRICE_STANDARD_ANNUAL,
+  premium_annual: env.STRIPE_PRICE_PREMIUM_ANNUAL,
+  enterprise_annual: env.STRIPE_PRICE_ENTERPRISE_ANNUAL,
 };
 
 import axios from 'axios';
 import { getCurrentUser } from './authService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = env.API_URL;
 
 // Function to create a checkout session with our backend
 export async function createCheckoutSession(priceId: string, successUrl: string, cancelUrl: string): Promise<{ url: string }> {

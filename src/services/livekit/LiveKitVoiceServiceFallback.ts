@@ -12,9 +12,14 @@ function isConnectionStateValue(state: string): state is 'connected' | 'connecti
 }
 
 // Constants for LiveKit configuration
-const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'wss://lark-za4hpayr.livekit.cloud';
-const LIVEKIT_API_KEY = import.meta.env.VITE_LIVEKIT_API_KEY || 'APIriVQTTMAvLQ4';
-const LIVEKIT_API_SECRET = import.meta.env.VITE_LIVEKIT_API_SECRET || 'fleSOaoOdQ0v5fOatkISxYqvNygclQAeSilRMZ1kLbwB';
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
+const LIVEKIT_API_KEY = import.meta.env.VITE_LIVEKIT_API_KEY;
+const LIVEKIT_API_SECRET = import.meta.env.VITE_LIVEKIT_API_SECRET;
+
+// Validation to ensure environment variables are set
+if (!LIVEKIT_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+  console.error('[LiveKitVoiceFallback] Missing required environment variables for LiveKit');
+}
 
 // Define types for voice synthesis events
 export type VoiceSynthesisEvent = {

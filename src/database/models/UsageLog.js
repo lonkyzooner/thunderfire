@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const { fieldEncryption } = require('mongoose-field-encryption');
 
 // This model tracks detailed usage of LARK's law enforcement features
 const UsageLogSchema = new Schema({
@@ -96,6 +97,12 @@ const UsageLogSchema = new Schema({
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt timestamps
+});
+
+// Encrypt 'details' field at rest using AES-256 key from environment
+UsageLogSchema.plugin(fieldEncryption, {
+  fields: ['details'],
+  secret: process.env.MONGO_FIELD_KEY
 });
 
 // Index for faster queries by user and feature type
