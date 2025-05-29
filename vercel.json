@@ -38,23 +38,19 @@
   "functions": {
     "api/auth/*.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "nodejs18.x"
+      "maxDuration": 30
     },
     "api/stripe/*.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "nodejs18.x"
+      "maxDuration": 30
     },
     "api/subscription/*.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "nodejs18.x"
+      "maxDuration": 30
     },
     "api/*.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "nodejs18.x"
+      "maxDuration": 30
     }
   },
   "env": {
