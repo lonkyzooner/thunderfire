@@ -61,16 +61,6 @@
     "NODE_ENV": "production",
     "VITE_APP_VERSION": "1.2.0"
   },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "zeroConfig": true
-      }
-    }
-  ],
   "regions": ["iad1"],
   "installCommand": "npm ci",
   "outputDirectory": "dist"
