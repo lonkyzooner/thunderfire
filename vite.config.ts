@@ -63,10 +63,9 @@ export default defineConfig({
             '@livekit/agents'
           ],
           
-          // Map and visualization
+          // Map and visualization - removed react-map-gl due to build issues
           'map-vendor': [
-            'mapbox-gl',
-            'react-map-gl'
+            'mapbox-gl'
           ],
           
           // Charts and data visualization
@@ -139,7 +138,8 @@ export default defineConfig({
       '@xenova/transformers', // Exclude heavy AI libraries from pre-bundling
       'livekit-server-sdk',    // Server-only dependency
       'mongoose',              // Server-only dependency
-      'express'                // Server-only dependency
+      'express',               // Server-only dependency
+      'react-map-gl'           // Exclude due to build issues
     ]
   }
 });
