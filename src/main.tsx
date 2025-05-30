@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/DevAuthContext'
 import { StripeProvider } from './contexts/StripeContext'
 import AppRouter from './router/AppRouter'
 import { ContextProvider } from './contexts/ContextProvider'
+import './index.css'
 
 // Check for development mode
 const isDevelopment = import.meta.env.DEV;
