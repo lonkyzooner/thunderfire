@@ -35,7 +35,17 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase chunk size warning limit
     rollupOptions: {
       // Exclude Node.js specific dependencies from client bundle
-      external: ['fs', 'path', 'os', 'crypto', 'stream', 'util', 'events'],
+      external: [
+        'fs', 'path', 'os', 'crypto', 'stream', 'util', 'events',
+        // Exclude LiveKit server packages that contain native binaries
+        '@livekit/rtc-node',
+        '@livekit/agents',
+        'livekit-server-sdk',
+        /^@livekit\/rtc-node/,
+        /^@livekit\/agents/,
+        // Exclude all Node.js modules
+        /^node:/
+      ],
       output: {
         // Optimize manual chunks for better loading
         manualChunks: {
@@ -57,10 +67,9 @@ export default defineConfig({
             '@google/generative-ai'
           ],
           
-          // Voice and LiveKit services - separate chunk
+          // Voice services - only browser-compatible packages
           'voice-services': [
-            'livekit-client',
-            '@livekit/agents'
+            'livekit-client'
           ],
           
           // Map and visualization - removed react-map-gl due to build issues
@@ -135,11 +144,13 @@ export default defineConfig({
       'lucide-react'
     ],
     exclude: [
-      '@xenova/transformers', // Exclude heavy AI libraries from pre-bundling
-      'livekit-server-sdk',    // Server-only dependency
-      'mongoose',              // Server-only dependency
-      'express',               // Server-only dependency
-      'react-map-gl'           // Exclude due to build issues
+      '@xenova/transformers',   // Exclude heavy AI libraries from pre-bundling
+      'livekit-server-sdk',     // Server-only dependency
+      '@livekit/rtc-node',      // Server-only dependency with native binaries
+      '@livekit/agents',        // Server-only dependency with native binaries
+      'mongoose',               // Server-only dependency
+      'express',                // Server-only dependency
+      'react-map-gl'            // Exclude due to build issues
     ]
   }
 });
