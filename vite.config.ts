@@ -27,6 +27,9 @@ export default defineConfig({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     'process.env.VITE_DEV': JSON.stringify(process.env.VITE_DEV || 'true'),
     global: 'globalThis',
+    // Remove console.log in production
+    'console.log': process.env.NODE_ENV === 'production' ? 'void 0' : 'console.log',
+    'console.debug': process.env.NODE_ENV === 'production' ? 'void 0' : 'console.debug'
   },
   build: {
     // Optimize for Vercel deployment
@@ -65,16 +68,6 @@ export default defineConfig({
           'ai-services': [
             '@xenova/transformers',
             '@google/generative-ai'
-          ],
-          
-          // Voice services - only browser-compatible packages
-          'voice-services': [
-            'livekit-client'
-          ],
-          
-          // Map and visualization - removed react-map-gl due to build issues
-          'map-vendor': [
-            'mapbox-gl'
           ],
           
           // Charts and data visualization
@@ -124,15 +117,8 @@ export default defineConfig({
       }
     },
     
-    // Optimize bundle size
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log in production
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug'] // Remove specific console methods
-      }
-    }
+    // Use esbuild instead of terser (built into Vite, no extra dependencies)
+    minify: 'esbuild'
   },
   
   // Optimize dependencies for production
@@ -150,7 +136,9 @@ export default defineConfig({
       '@livekit/agents',        // Server-only dependency with native binaries
       'mongoose',               // Server-only dependency
       'express',                // Server-only dependency
-      'react-map-gl'            // Exclude due to build issues
+      'react-map-gl',           // Exclude due to build issues
+      'livekit-client',         // Exclude to prevent empty chunk warnings
+      'mapbox-gl'               // Exclude to prevent empty chunk warnings
     ]
   }
 });
