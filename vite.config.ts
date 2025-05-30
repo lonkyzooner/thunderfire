@@ -26,10 +26,7 @@ export default defineConfig({
     'process.env': {},
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     'process.env.VITE_DEV': JSON.stringify(process.env.VITE_DEV || 'true'),
-    global: 'globalThis',
-    // Remove console.log in production
-    'console.log': process.env.NODE_ENV === 'production' ? 'void 0' : 'console.log',
-    'console.debug': process.env.NODE_ENV === 'production' ? 'void 0' : 'console.debug'
+    global: 'globalThis'
   },
   build: {
     // Optimize for Vercel deployment
@@ -117,7 +114,7 @@ export default defineConfig({
       }
     },
     
-    // Use esbuild instead of terser (built into Vite, no extra dependencies)
+    // Use esbuild minification (built into Vite, no extra dependencies)
     minify: 'esbuild'
   },
   
