@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { indexedDBService } from '../../lib/indexeddb-service';
+import { settingsDB } from '../../lib/indexedDB';
 import { v4 as uuidv4 } from 'uuid';
 import { whisperService } from '../whisper/WhisperService';
 
@@ -451,35 +451,39 @@ private cacheSizeLimit: number = 10; // Limit to 10 cached audio blobs to manage
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
           const arrayBuffer = await audioBlob.arrayBuffer();
           const audioData = await this.audioContext!.decodeAudioData(arrayBuffer);
-// Check if audio data is in cache before processing
-let cacheKey = this.generateCacheKey(float32Array);
-if (this.audioCache.has(cacheKey)) {
-  const cachedBlob = this.audioCache.get(cacheKey);
-  if (cachedBlob) {
-    this.debug('Using cached audio data for processing');
-    const cachedArrayBuffer = await cachedBlob.arrayBuffer();
-    const cachedAudioData = await this.audioContext!.decodeAudioData(cachedArrayBuffer);
-    const cachedFloat32Array = cachedAudioData.getChannelData(0);
-    try {
-      const result = await whisperService.transcribeAudio(cachedFloat32Array);
-      this.handleWhisperResult(result);
-      return;
-    } catch (error) {
-      console.error('Error processing cached audio with Whisper:', error);
-      this.handleError(error instanceof Error ? error : new Error(String(error)));
-      return;
-    }
-  }
-}
-// If not in cache, proceed with processing and cache the result
-this.audioCache.set(cacheKey, audioBlob);
-if (this.audioCache.size > this.cacheSizeLimit) {
-  const firstKey = this.audioCache.keys().next().value;
-  this.audioCache.delete(firstKey);
-  this.debug('Removed oldest audio data from cache to maintain size limit');
-}
-this.debug('Added new audio data to cache');
           const float32Array = audioData.getChannelData(0);
+
+          // Check if audio data is in cache before processing
+          let cacheKey = this.generateCacheKey(float32Array);
+          if (this.audioCache.has(cacheKey)) {
+            const cachedBlob = this.audioCache.get(cacheKey);
+            if (cachedBlob) {
+              this.debug('Using cached audio data for processing');
+              const cachedArrayBuffer = await cachedBlob.arrayBuffer();
+              const cachedAudioData = await this.audioContext!.decodeAudioData(cachedArrayBuffer);
+              const cachedFloat32Array = cachedAudioData.getChannelData(0);
+              try {
+                const result = await whisperService.transcribeAudio(cachedFloat32Array);
+                this.handleWhisperResult(result);
+                return;
+              } catch (error) {
+                console.error('Error processing cached audio with Whisper:', error);
+                this.handleError(error instanceof Error ? error : new Error(String(error)));
+                return;
+              }
+            }
+          }
+          
+          // If not in cache, proceed with processing and cache the result
+          this.audioCache.set(cacheKey, audioBlob);
+          if (this.audioCache.size > this.cacheSizeLimit) {
+            const firstKey = this.audioCache.keys().next().value;
+            if (firstKey) {
+              this.audioCache.delete(firstKey);
+              this.debug('Removed oldest audio data from cache to maintain size limit');
+            }
+          }
+          this.debug('Added new audio data to cache');
 
           try {
             const result = await whisperService.transcribeAudio(float32Array);
@@ -842,7 +846,7 @@ this.debug('Added new audio data to cache');
   private logErrorToAnalytics(errorType: string, errorDetails: string): void {
     try {
       // Store error in IndexedDB for later analysis
-      indexedDBService.addItem('error_logs', {
+      settingsDB.saveSetting(`error_log_${uuidv4()}`, {
         id: uuidv4(),
         errorType,
         errorDetails,
