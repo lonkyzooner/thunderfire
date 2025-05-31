@@ -1,0 +1,420 @@
+/**
+ * LARK Tactical Command Center Theme
+ * 
+ * Military-grade police dispatch center interface styling
+ * Combines professional law enforcement design with tactical elements
+ */
+
+/* Tactical Color System */
+:root {
+  /* Base Tactical Colors */
+  --tactical-dark: #0f1419;          /* Primary background - very dark blue-gray */
+  --tactical-darker: #1a1f2e;        /* Darker panels and headers */
+  --tactical-panel: #252a3a;         /* Panel backgrounds */
+  --tactical-accent: #00d4ff;        /* Bright cyan accent - tactical blue */
+  --tactical-border: #2a3441;        /* Subtle borders */
+  
+  /* Status Colors */
+  --tactical-success: #22c55e;       /* Green for active/success states */
+  --tactical-warning: #f59e0b;       /* Amber for warnings */
+  --tactical-danger: #ef4444;        /* Red for alerts/danger */
+  --tactical-info: #3b82f6;          /* Blue for information */
+  
+  /* Text Colors */
+  --tactical-text-primary: #ffffff;   /* Primary white text */
+  --tactical-text-secondary: #9ca3af; /* Secondary gray text */
+  --tactical-text-muted: #6b7280;     /* Muted text */
+  
+  /* Law Enforcement Brand */
+  --le-blue: #003087;                 /* Traditional law enforcement blue */
+  --le-gold: #d4af37;                 /* Badge gold accent */
+  
+  /* Tactical Gradients */
+  --tactical-gradient-primary: linear-gradient(135deg, var(--tactical-dark) 0%, var(--tactical-darker) 100%);
+  --tactical-gradient-accent: linear-gradient(135deg, var(--tactical-accent) 0%, #0099cc 100%);
+  --tactical-gradient-danger: linear-gradient(135deg, var(--tactical-danger) 0%, #dc2626 100%);
+}
+
+/* Base Tactical Classes */
+.bg-tactical-dark {
+  background-color: var(--tactical-dark);
+}
+
+.bg-tactical-darker {
+  background-color: var(--tactical-darker);
+}
+
+.bg-tactical-panel {
+  background-color: var(--tactical-panel);
+}
+
+.border-tactical-accent {
+  border-color: var(--tactical-accent);
+}
+
+.text-tactical-accent {
+  color: var(--tactical-accent);
+}
+
+.border-tactical-border {
+  border-color: var(--tactical-border);
+}
+
+/* Tactical Component Styling */
+.tactical-header {
+  background: var(--tactical-gradient-primary);
+  border-bottom: 2px solid var(--tactical-accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tactical-panel {
+  background: var(--tactical-panel);
+  border: 1px solid var(--tactical-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tactical-button {
+  background: var(--tactical-gradient-accent);
+  border: 1px solid var(--tactical-accent);
+  color: var(--tactical-text-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.tactical-button:hover {
+  background: var(--tactical-accent);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.tactical-button-danger {
+  background: var(--tactical-gradient-danger);
+  border: 1px solid var(--tactical-danger);
+}
+
+.tactical-button-danger:hover {
+  background: var(--tactical-danger);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Status Indicators */
+.status-live {
+  color: var(--tactical-success);
+  animation: pulse-live 2s infinite;
+}
+
+.status-delayed {
+  color: var(--tactical-warning);
+  animation: pulse-warning 2s infinite;
+}
+
+.status-offline {
+  color: var(--tactical-danger);
+  animation: pulse-danger 2s infinite;
+}
+
+/* Tactical Animations */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes tactical-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--tactical-accent);
+  }
+  50% { 
+    box-shadow: 0 0 20px var(--tactical-accent), 0 0 30px var(--tactical-accent);
+  }
+}
+
+/* Tactical Typography */
+.tactical-heading {
+  font-family: 'Orbitron', 'Roboto Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--tactical-accent);
+}
+
+.tactical-code {
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.tactical-status {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+/* Mission Control Chat Styling */
+.mission-control-chat {
+  background: var(--tactical-panel);
+  border: 1px solid var(--tactical-accent);
+  border-radius: 8px;
+  position: relative;
+}
+
+.mission-control-chat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--tactical-gradient-accent);
+}
+
+/* Quick Deploy Actions */
+.quick-deploy-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr;
+}
+
+.deploy-button {
+  padding: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.deploy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.deploy-button:hover::before {
+  left: 100%;
+}
+
+.deploy-backup {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 1px solid #ef4444;
+}
+
+.deploy-medical {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: 1px solid #3b82f6;
+}
+
+.deploy-code3 {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  border: 1px solid #f59e0b;
+}
+
+.deploy-alert {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border: 1px solid #8b5cf6;
+}
+
+/* Intel Panel Styling */
+.intel-panel {
+  background: var(--tactical-panel);
+  border: 1px solid var(--tactical-border);
+}
+
+.intel-button {
+  background: var(--tactical-darker);
+  border: 1px solid var(--tactical-border);
+  color: var(--tactical-text-primary);
+  transition: all 0.2s ease;
+}
+
+.intel-button:hover {
+  background: #374151;
+  border-color: var(--tactical-accent);
+  color: var(--tactical-accent);
+}
+
+/* Status Panel Elements */
+.unit-status {
+  background: var(--tactical-darker);
+  border: 1px solid var(--tactical-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.unit-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tactical-success);
+  animation: pulse-live 2s infinite;
+}
+
+.threat-indicator {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.threat-low {
+  background: var(--tactical-success);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.threat-medium {
+  background: var(--tactical-warning);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.threat-high {
+  background: var(--tactical-danger);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  animation: tactical-glow 2s infinite;
+}
+
+/* Incident Panel */
+.incident-panel {
+  background: var(--tactical-panel);
+  border: 1px solid var(--tactical-danger);
+  border-radius: 8px;
+}
+
+.incident-header {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  border-bottom: 1px solid var(--tactical-danger);
+  padding: 0.75rem 1rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.incident-status-active {
+  color: var(--tactical-success);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.incident-status-active::before {
+  content: '●';
+  margin-right: 0.25rem;
+  animation: pulse-live 2s infinite;
+}
+
+/* Responsive Tactical Layout */
+@media (max-width: 1024px) {
+  .tactical-sidebar {
+    width: 300px;
+  }
+  
+  .tactical-status-panel {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tactical-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .tactical-header .sector-info {
+    display: none;
+  }
+  
+  .tactical-main {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .tactical-sidebar,
+  .tactical-status-panel {
+    width: 100%;
+    margin: 0.5rem;
+  }
+  
+  .mission-control {
+    margin: 0.5rem;
+  }
+}
+
+/* Accessibility Enhancements */
+.tactical-button:focus,
+.intel-button:focus,
+.deploy-button:focus {
+  outline: 2px solid var(--tactical-accent);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --tactical-dark: #000000;
+    --tactical-darker: #1a1a1a;
+    --tactical-accent: #00ffff;
+    --tactical-text-primary: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .deploy-button::before,
+  .status-live,
+  .status-delayed,
+  .status-offline,
+  .tactical-glow,
+  .unit-indicator {
+    animation: none;
+  }
+  
+  .tactical-button,
+  .intel-button,
+  .deploy-button {
+    transition: none;
+  }
+}
+
+/* Print styles for tactical reports */
+@media print {
+  .bg-tactical-dark,
+  .bg-tactical-darker,
+  .bg-tactical-panel {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .text-tactical-accent {
+    color: #003087 !important;
+  }
+  
+  .tactical-button,
+  .deploy-button {
+    background: white !important;
+    border: 2px solid #003087 !important;
+    color: #003087 !important;
+  }
+}
